@@ -1,0 +1,210 @@
+[
+	{
+		"id": "chatgpt",
+		"name": "ChatGPT",
+		"url": "https://chat.openai.com",
+		"description": "OpenAI 出品的 AI 对话助手，编程/写作/分析全能",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=openai.com&sz=32",
+		"category": "AI",
+		"pinned": true
+	},
+	{
+		"id": "claude",
+		"name": "Claude",
+		"url": "https://claude.ai",
+		"description": "Anthropic 出品，长文档分析和代码审查表现优秀",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=claude.ai&sz=32",
+		"category": "AI",
+		"pinned": true
+	},
+	{
+		"id": "v0",
+		"name": "v0.dev",
+		"url": "https://v0.dev",
+		"description": "Vercel 出品的 AI UI 生成工具，直接输出 Tailwind + React 代码",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=v0.dev&sz=32",
+		"category": "AI",
+		"tags": ["UI", "代码生成"]
+	},
+	{
+		"id": "perplexity",
+		"name": "Perplexity",
+		"url": "https://www.perplexity.ai",
+		"description": "带实时联网的 AI 搜索引擎，答案附带来源引用",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=perplexity.ai&sz=32",
+		"category": "AI"
+	},
+	{
+		"id": "github",
+		"name": "GitHub",
+		"url": "https://github.com",
+		"description": "全球最大代码托管平台，开源项目聚集地",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=github.com&sz=32",
+		"category": "开发工具",
+		"pinned": true
+	},
+	{
+		"id": "vscode-web",
+		"name": "VS Code Web",
+		"url": "https://vscode.dev",
+		"description": "浏览器版 VS Code，随时随地查看和编辑代码",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=vscode.dev&sz=32",
+		"category": "开发工具"
+	},
+	{
+		"id": "stackblitz",
+		"name": "StackBlitz",
+		"url": "https://stackblitz.com",
+		"description": "在线 Node.js 开发环境，秒速创建 React/Vue 项目",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=stackblitz.com&sz=32",
+		"category": "开发工具"
+	},
+	{
+		"id": "codepenio",
+		"name": "CodePen",
+		"url": "https://codepen.io",
+		"description": "前端代码片段在线演示，灵感来源和学习素材库",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=codepen.io&sz=32",
+		"category": "开发工具"
+	},
+	{
+		"id": "vercel",
+		"name": "Vercel",
+		"url": "https://vercel.com",
+		"description": "前端部署首选平台，与 GitHub 一键集成，支持 Edge Functions",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=vercel.com&sz=32",
+		"category": "开发工具",
+		"pinned": true
+	},
+	{
+		"id": "figma",
+		"name": "Figma",
+		"url": "https://figma.com",
+		"description": "协作式 UI 设计工具，前端与设计师对接的标准工具",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=figma.com&sz=32",
+		"category": "设计",
+		"pinned": true
+	},
+	{
+		"id": "excalidraw",
+		"name": "Excalidraw",
+		"url": "https://excalidraw.com",
+		"description": "手绘风格在线白板，画架构图和流程图的首选",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=excalidraw.com&sz=32",
+		"category": "设计"
+	},
+	{
+		"id": "undraw",
+		"name": "unDraw",
+		"url": "https://undraw.co/illustrations",
+		"description": "免费 SVG 插画库，颜色可定制，适合项目展示页",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=undraw.co&sz=32",
+		"category": "设计"
+	},
+	{
+		"id": "coolors",
+		"name": "Coolors",
+		"url": "https://coolors.co",
+		"description": "快速生成配色方案，支持导出 CSS Variables",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=coolors.co&sz=32",
+		"category": "设计"
+	},
+	{
+		"id": "react-docs",
+		"name": "React 文档",
+		"url": "https://react.dev",
+		"description": "React 官方文档，新版以 Hooks 为核心，必读",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=react.dev&sz=32",
+		"category": "文档参考",
+		"pinned": true
+	},
+	{
+		"id": "tailwind-docs",
+		"name": "Tailwind CSS 文档",
+		"url": "https://tailwindcss.com/docs",
+		"description": "Tailwind 官方文档，类名查询和配置参考",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=tailwindcss.com&sz=32",
+		"category": "文档参考"
+	},
+	{
+		"id": "typescript-docs",
+		"name": "TypeScript 手册",
+		"url": "https://www.typescriptlang.org/docs/",
+		"description": "TypeScript 官方手册，类型系统深入理解必备",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=typescriptlang.org&sz=32",
+		"category": "文档参考"
+	},
+	{
+		"id": "mdn",
+		"name": "MDN Web Docs",
+		"url": "https://developer.mozilla.org",
+		"description": "Web 标准权威参考，JS/CSS/HTML API 查询首选",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=developer.mozilla.org&sz=32",
+		"category": "文档参考",
+		"pinned": true
+	},
+	{
+		"id": "caniuse",
+		"name": "Can I use",
+		"url": "https://caniuse.com",
+		"description": "查询 CSS/JS 特性的浏览器兼容性支持情况",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=caniuse.com&sz=32",
+		"category": "文档参考"
+	},
+	{
+		"id": "roadmap",
+		"name": "roadmap.sh",
+		"url": "https://roadmap.sh/frontend",
+		"description": "前端工程师学习路线图，技能树和成长路径参考",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=roadmap.sh&sz=32",
+		"category": "学习"
+	},
+	{
+		"id": "javascript-info",
+		"name": "JavaScript.info",
+		"url": "https://javascript.info",
+		"description": "最好的 JS 学习教程，从基础到进阶系统讲解",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=javascript.info&sz=32",
+		"category": "学习"
+	},
+	{
+		"id": "cssgrid",
+		"name": "CSS Grid Garden",
+		"url": "https://cssgridgarden.com",
+		"description": "通过游戏学习 CSS Grid 布局，28 关卡由浅入深",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=cssgridgarden.com&sz=32",
+		"category": "学习"
+	},
+	{
+		"id": "notion",
+		"name": "Notion",
+		"url": "https://notion.so",
+		"description": "知识管理和笔记工具，学习记录和项目规划",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=notion.so&sz=32",
+		"category": "效率"
+	},
+	{
+		"id": "ray-so",
+		"name": "Ray.so",
+		"url": "https://ray.so",
+		"description": "生成精美的代码截图，技术分享必备工具",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=ray.so&sz=32",
+		"category": "效率"
+	},
+	{
+		"id": "bundlephobia",
+		"name": "Bundlephobia",
+		"url": "https://bundlephobia.com",
+		"description": "查看 npm 包的体积和加载时间，选包时的性能参考",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=bundlephobia.com&sz=32",
+		"category": "效率"
+	},
+	{
+		"id": "regex101",
+		"name": "Regex101",
+		"url": "https://regex101.com",
+		"description": "在线正则表达式调试工具，支持实时匹配高亮和解释",
+		"iconUrl": "https://www.google.com/s2/favicons?domain=regex101.com&sz=32",
+		"category": "效率"
+	}
+]
