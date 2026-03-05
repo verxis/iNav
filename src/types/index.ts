@@ -137,8 +137,6 @@ export interface SearchBarProps {
 	placeholder?: string
 	/** 外部传入 ref，用于键盘快捷键聚焦 */
 	inputRef?: React.RefObject<HTMLInputElement | null>
-	/** 搜索引擎快捷跳转列表，有值时在输入框下方展示 */
-	searchEngines?: SearchEngine[]
 }
 
 export interface CategoryFilterProps {
@@ -160,6 +158,8 @@ export interface SiteCardProps {
 	site: Site
 	className?: string
 	searchQuery?: string
+	/** 搜索时显示的快捷键编号（1-9），用于 Ctrl+N 快速打开 */
+	rank?: number
 	onEdit?: (site: Site) => void
 	onDelete?: (site: Site) => void
 	onTogglePin?: (site: Site) => void

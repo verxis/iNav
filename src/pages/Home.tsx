@@ -9,12 +9,14 @@ import {
 import { NavLink } from 'react-router'
 import { BookmarkIO } from '@/components/molecules/BookmarkIO'
 import { CategoryFilter } from '@/components/molecules/CategoryFilter'
+import { EngineSettings } from '@/components/molecules/EngineSettings'
 import { CommandPalette } from '@/components/organisms/CommandPalette'
 import { Header } from '@/components/organisms/Header'
 import { NavGrid } from '@/components/organisms/NavGrid'
 import { SiteFormModal } from '@/components/organisms/SiteFormModal'
 import sitesData from '@/data/sites.json'
 import { useBookmarks } from '@/hooks/useBookmarks'
+import { useEngineOrder } from '@/hooks/useEngineOrder'
 import {
 	type SitePayload,
 	useSiteManager,
@@ -218,6 +220,9 @@ export default function Home() {
 	const deferredQuery = useDeferredValue(query)
 	const searchInputRef = useRef<HTMLInputElement>(null)
 
+	// ---- 搜索引擎顺序 & 启用状态 ----
+	const engineOrder = useEngineOrder()
+
 	// ---- 命令面板 ----
 	const [cmdOpen, setCmdOpen] = useState(false)
 
@@ -291,13 +296,81 @@ export default function Home() {
 		setActiveCategory(cat)
 	}, [])
 
-	// 任意可打印字符聚焦搜索框
+	// filteredSites ref：供键盘快捷键读取最新值，避免 closure 陈旧引用
+	const filteredSitesRef = useRef<typeof filteredSites>([])
+	filteredSitesRef.current = filteredSites
+
+	// query ref：供 keydown handler 读取，避免 stale closure
+	const queryRef = useRef(query)
+	queryRef.current = query
+
+	// enabledEngines ref：供键盘快捷键读取最新值
+	const enabledEnginesRef = useRef(engineOrder.enabledEngines)
+	enabledEnginesRef.current = engineOrder.enabledEngines
+
+	/**
+	 * 构建统一的「可打开条目」列表，顺序与网格渲染一致：
+	 *   1. 过滤后的站点
+	 *   2. 已启用的搜索引擎卡片（rank 紧接站点之后）
+	 * 只有在有搜索词时才追加引擎卡片。
+	 */
+	const buildOpenableList = (q: string): Array<{ url: string; label: string }> => {
+		const sites = filteredSitesRef.current
+		const trimmed = q.trim()
+
+		const result: Array<{ url: string; label: string }> = sites.map((s) => ({
+			url: s.url,
+			label: s.name,
+		}))
+
+		if (trimmed) {
+			for (const engine of enabledEnginesRef.current) {
+				result.push({
+					url: engine.searchUrl.replace('{q}', encodeURIComponent(trimmed)),
+					label: engine.name,
+				})
+			}
+		}
+
+		return result
+	}
+
+	// 任意可打印字符聚焦搜索框 + Enter 打开第一结果 + Ctrl/⌘+1-9 快速打开
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			// ⌘K / Ctrl+K 打开命令面板
 			if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
 				e.preventDefault()
 				setCmdOpen(true)
+				return
+			}
+
+			// Ctrl/⌘+1~9：打开第 N 个条目（站点 + 引擎卡片统一编号）
+			if ((e.ctrlKey || e.metaKey) && /^[1-9]$/.test(e.key)) {
+				const q = queryRef.current
+				if (!q.trim()) return
+				const idx = Number(e.key) - 1
+				const list = buildOpenableList(q)
+				const item = list[idx]
+				if (item) {
+					e.preventDefault()
+					window.open(item.url, '_blank', 'noopener,noreferrer')
+				}
+				return
+			}
+
+			// Enter 在搜索框内：打开第一个条目
+			if (e.key === 'Enter' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+				const target = e.target as HTMLElement
+				if (target === searchInputRef.current) {
+					const q = queryRef.current
+					if (!q.trim()) return
+					e.preventDefault()
+					const list = buildOpenableList(q)
+					if (list.length > 0) {
+						window.open(list[0].url, '_blank', 'noopener,noreferrer')
+					}
+				}
 				return
 			}
 
@@ -365,16 +438,21 @@ export default function Home() {
 		<div className="min-h-screen flex flex-col bg-background">
 			{/* ---- Header ---- */}
 			<Header
-				searchValue={query}
-				onSearchChange={handleSearchChange}
-				searchInputRef={searchInputRef}
-				siteCount={allSites.length}
-				onOpenCommandPalette={() => setCmdOpen(true)}
-				onAddSite={() => {
-					setEditingSite(undefined)
-					setFormOpen(true)
-				}}
-			/>
+					searchValue={query}
+					onSearchChange={handleSearchChange}
+					searchInputRef={searchInputRef}
+					siteCount={allSites.length}
+					onOpenCommandPalette={() => setCmdOpen(true)}
+					onAddSite={() => {
+						setEditingSite(undefined)
+						setFormOpen(true)
+					}}
+					onReset={() => {
+						setQuery('')
+						setActiveCategory(null)
+						requestAnimationFrame(() => searchInputRef.current?.blur())
+					}}
+				/>
 
 			{/* ---- 主内容 ---- */}
 			<main
@@ -441,11 +519,13 @@ export default function Home() {
 					</div>
 				)}
 
-				{/* 导航卡片网格 / 列表 */}
+				{/* 导航卡片网格 */}
 				<section aria-label="导航站点">
 					<NavGrid
 						sites={filteredSites}
 						searchQuery={deferredQuery}
+						enabledEngines={engineOrder.enabledEngines}
+						engineSettings={<EngineSettings engineOrder={engineOrder} />}
 						isStale={isStale}
 						hasFilter={hasFilter}
 						onEdit={handleEdit}

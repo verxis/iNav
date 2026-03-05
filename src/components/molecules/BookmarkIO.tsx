@@ -226,7 +226,7 @@ export function BookmarkIO({
 							aria-hidden="true"
 						/>
 						<div
-							className="absolute right-0 top-full mt-1 z-50 w-44 bg-surface border border-border rounded-lg overflow-hidden animate-in"
+							className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 z-50 w-44 bg-surface border border-border rounded-lg overflow-hidden animate-in"
 							role="menu"
 						>
 							<button

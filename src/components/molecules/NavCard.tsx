@@ -131,12 +131,18 @@ function SourceBadge({ source }: { source?: string }) {
 		)
 	}
 	if (source === 'custom') {
+		// 绿色小草芽图标，代表「用户种下的站点」
 		return (
-			<span className="inline-flex items-center gap-0.5 text-[10px] text-primary leading-none">
+			<span
+				className="inline-flex items-center gap-0.5 text-[10px] leading-none"
+				style={{ color: '#22c55e' }}
+				title="自定义站点"
+				aria-label="自定义站点"
+			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
-					width="9"
-					height="9"
+					width="10"
+					height="10"
 					viewBox="0 0 24 24"
 					fill="none"
 					stroke="currentColor"
@@ -145,8 +151,12 @@ function SourceBadge({ source }: { source?: string }) {
 					strokeLinejoin="round"
 					aria-hidden="true"
 				>
-					<line x1="12" y1="17" x2="12" y2="22" />
-					<path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+					{/* 茎 */}
+					<path d="M12 22V12" />
+					{/* 左叶 */}
+					<path d="M12 12C12 12 7 10 5 6c3 0 6 2 7 6z" />
+					{/* 右叶 */}
+					<path d="M12 12C12 12 17 10 19 6c-3 0-6 2-7 6z" />
 				</svg>
 			</span>
 		)
@@ -191,6 +201,7 @@ export function NavCard({
 	site,
 	className = '',
 	searchQuery = '',
+	rank,
 	onEdit,
 	onDelete,
 	onTogglePin,
@@ -371,10 +382,26 @@ export function NavCard({
 					{highlightText(description, searchQuery)}
 				</p>
 
-				{/* 分类标签 */}
-				<div className="mt-auto flex items-center justify-between pt-0.5">
-					<Badge variant="primary">{category}</Badge>
-				</div>
+				{/* 分类标签 + 快捷键编号 */}
+					<div className="mt-auto flex items-center justify-between pt-0.5">
+						<Badge variant="primary">{category}</Badge>
+						{rank !== undefined && (
+							<span
+								className="
+									inline-flex items-center justify-center
+									h-4 min-w-4 px-1
+									rounded text-[10px] font-semibold tabular-nums leading-none
+									bg-muted text-muted-foreground
+									border border-border
+									select-none
+								"
+								aria-label={`快捷键 Ctrl+${rank}`}
+								title={`Ctrl+${rank} 打开`}
+							>
+								{rank}
+							</span>
+						)}
+					</div>
 			</a>
 
 			{/* 右键上下文菜单 */}

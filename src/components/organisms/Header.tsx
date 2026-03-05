@@ -257,6 +257,8 @@ export interface HeaderProps {
 	siteCount: number
 	onOpenCommandPalette: () => void
 	onAddSite: () => void
+	/** 点击 Logo 时重置搜索词和分类筛选 */
+	onReset: () => void
 }
 
 // ---- Header 主组件 ----
@@ -268,21 +270,23 @@ export function Header({
 	siteCount,
 	onOpenCommandPalette,
 	onAddSite,
+	onReset,
 }: HeaderProps) {
 	return (
 		<header className="sticky top-0 z-50 glass border-b border-border">
-			<div className="mx-auto max-w-7xl flex items-center gap-2 h-12 px-4 sm:px-6">
-				{/* 左：Logo */}
-				<NavLink
-					to="/"
-					className="text-foreground no-underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-					aria-label="iNav 首页"
-				>
-					<Logo />
-				</NavLink>
+			<div className="w-full flex items-center gap-2 h-12 px-4 sm:px-6">
+				{/* 左：Logo — 点击重置搜索和分类 */}
+					<NavLink
+						to="/"
+						onClick={onReset}
+						className="text-foreground no-underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+						aria-label="iNav 首页，点击清除搜索"
+					>
+						<Logo />
+					</NavLink>
 
 				{/* 中：搜索框（flex-1） */}
-				<div className="flex-1 min-w-0 max-w-lg mx-2">
+				<div className="flex-1 min-w-0 mx-2">
 					<SearchBar
 						value={searchValue}
 						onChange={onSearchChange}

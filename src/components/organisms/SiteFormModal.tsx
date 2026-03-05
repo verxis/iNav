@@ -13,6 +13,55 @@ import {
 import type { Site, SiteCategory } from '@/types'
 
 /* ============================================================
+   useFetchMeta
+   通过 allorigins 代理抓取目标页面的 title / description。
+   - 仅在添加模式下、URL 合法时触发
+   - 500ms 防抖，避免频繁请求
+   - 静默失败：网络错误或解析异常均不影响表单使用
+   ============================================================ */
+
+interface PageMeta {
+	title: string
+	description: string
+}
+
+async function fetchPageMeta(url: string): Promise<PageMeta | null> {
+	try {
+		// codetabs 代理：稳定、免费、无需 API Key
+		const proxyUrl = `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(url)}`
+		const res = await fetch(proxyUrl, { signal: AbortSignal.timeout(10000) })
+		if (!res.ok) return null
+		const html = await res.text()
+		if (!html) return null
+
+		const doc = new DOMParser().parseFromString(html, 'text/html')
+
+		const title =
+			doc.querySelector('title')?.textContent?.trim() ?? ''
+
+		const description =
+			doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() ||
+			doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() ||
+			doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content')?.trim() ||
+			''
+
+		if (!title && !description) return null
+		return { title, description }
+	} catch {
+		return null
+	}
+}
+
+function isValidUrl(url: string): boolean {
+	try {
+		const u = new URL(url.trim())
+		return u.protocol === 'http:' || u.protocol === 'https:'
+	} catch {
+		return false
+	}
+}
+
+/* ============================================================
    SiteFormModal
    - 添加新站点 / 编辑已有站点
    - 实时表单验证
@@ -118,7 +167,7 @@ function Field({ label, htmlFor, error, required, children, hint }: FieldProps) 
 
 const inputCls = (hasError: boolean) =>
 	[
-		'input-base px-3 py-2 text-sm',
+		'input-base px-3 py-2 text-base sm:text-sm',
 		hasError ? 'border-error focus:border-error' : '',
 	]
 		.filter(Boolean)
@@ -177,6 +226,13 @@ export function SiteFormModal({
 	const [tagInput, setTagInput] = useState('')
 	const firstInputRef = useRef<HTMLInputElement>(null)
 
+	// ---- 自动获取元数据状态 ----
+	const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+	// 记录已抓取过的 URL，避免重复请求
+	const fetchedUrlRef = useRef<string>('')
+	// 防抖 timer
+	const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
 	// 打开时初始化 / 重置
 	useEffect(() => {
 		if (open) {
@@ -185,6 +241,9 @@ export function SiteFormModal({
 			setErrors([])
 			setSubmitted(false)
 			setTagInput('')
+			setFetchStatus('idle')
+			fetchedUrlRef.current = ''
+			if (debounceRef.current) clearTimeout(debounceRef.current)
 			requestAnimationFrame(() => firstInputRef.current?.focus())
 		}
 	}, [open, editSite])
@@ -214,6 +273,50 @@ export function SiteFormModal({
 			}
 		},
 		[form, submitted],
+	)
+
+	/**
+	 * URL 变更时触发自动获取（仅添加模式）。
+	 * 防抖 500ms 后检查 URL 合法性，合法则请求 allorigins。
+	 * 只有当名称或描述为空时才自动填入，不覆盖用户已输入的内容。
+	 */
+	const handleUrlChange = useCallback(
+		(url: string) => {
+			setField('url', url)
+			if (isEdit) return
+
+			// 清除上一个防抖计时器
+			if (debounceRef.current) clearTimeout(debounceRef.current)
+
+			const trimmed = url.trim()
+
+			// URL 不合法或已经抓取过，直接重置状态
+			if (!isValidUrl(trimmed)) {
+				setFetchStatus('idle')
+				return
+			}
+			if (trimmed === fetchedUrlRef.current) return
+
+			// 防抖：用户停止输入 600ms 后才发请求
+			// loading 状态也在 timeout 内设置，避免加载圈一直转但请求未发出
+			debounceRef.current = setTimeout(async () => {
+				setFetchStatus('loading')
+				fetchedUrlRef.current = trimmed
+				const meta = await fetchPageMeta(trimmed)
+				if (!meta) {
+					setFetchStatus('error')
+					return
+				}
+				setFetchStatus('done')
+				// 只填入用户尚未输入的字段，不覆盖已有内容
+				setForm((prev) => ({
+					...prev,
+					name: prev.name.trim() ? prev.name : (meta.title.slice(0, 50) || prev.name),
+					description: prev.description.trim() ? prev.description : (meta.description.slice(0, 100) || prev.description),
+				}))
+			}, 600)
+		},
+		[setField, isEdit],
 	)
 
 	// 获取某字段的错误信息
@@ -348,7 +451,11 @@ export function SiteFormModal({
 							htmlFor="sf-url"
 							required
 							error={fieldError('url')}
-							hint="支持 http / https 链接，添加后自动获取网站图标"
+							hint={
+								isEdit
+									? '修改 URL 后将重新获取网站图标'
+									: '输入链接后自动获取标题与描述'
+							}
 						>
 							<div className="relative">
 								<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-muted-foreground">
@@ -358,14 +465,68 @@ export function SiteFormModal({
 									id="sf-url"
 									type="url"
 									value={form.url}
-									onChange={(e) => setField('url', e.target.value)}
+									onChange={(e) => handleUrlChange(e.target.value)}
 									placeholder="https://example.com"
-									className={[inputCls(Boolean(fieldError('url'))), 'pl-8'].join(' ')}
+									className={[inputCls(Boolean(fieldError('url'))), 'pl-8 pr-8'].join(' ')}
 									autoComplete="url"
 									autoCapitalize="none"
 									spellCheck={false}
 								/>
+								{/* 抓取状态指示器 */}
+								{!isEdit && fetchStatus !== 'idle' && (
+									<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
+										{fetchStatus === 'loading' && (
+											<span
+												className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
+												aria-label="正在获取页面信息"
+											/>
+										)}
+										{fetchStatus === 'done' && (
+											<svg
+												width="14"
+												height="14"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2.5"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="text-success"
+												aria-label="已自动填入标题与描述"
+											>
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+										)}
+										{fetchStatus === 'error' && (
+											<svg
+												width="13"
+												height="13"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												className="text-muted-foreground"
+												aria-label="无法自动获取，请手动填写"
+											>
+												<circle cx="12" cy="12" r="10" />
+												<line x1="12" y1="8" x2="12" y2="12" />
+												<line x1="12" y1="16" x2="12.01" y2="16" />
+											</svg>
+										)}
+									</div>
+								)}
 							</div>
+							{/* 抓取成功提示 */}
+							{!isEdit && fetchStatus === 'done' && (
+								<p className="text-[11px] text-success leading-tight flex items-center gap-1">
+									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+										<polyline points="20 6 9 17 4 12" />
+									</svg>
+									已自动填入标题与描述，可手动修改
+								</p>
+							)}
 						</Field>
 
 						{/* 描述 */}
@@ -461,7 +622,7 @@ export function SiteFormModal({
 										}
 									}}
 									placeholder="输入标签后按 Enter"
-									className="input-base px-3 py-2 text-sm"
+									className="input-base px-3 py-2 text-base sm:text-sm"
 									autoComplete="off"
 								/>
 							</div>
