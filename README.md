@@ -29,13 +29,12 @@ https://nav.dogxi.me
 
   <br />
 
-| 桌面端                                       | 移动端                                     |
-| -------------------------------------------- | ------------------------------------------ |
-| ![desktop-home](./preview/desktop-home.webp) | ![mobile-home](./preview/mobile-home.webp) |
 
-| 命令面板                       | 创建站点                                   |
-| ------------------------------ | ------------------------------------------ |
-| ![panel](./preview/panel.webp) | ![create-site](./preview/create-site.webp) |
+
+| 桌面端首页                                   | 移动端首页                                 | 命令面板                       | 创建站点                                   |
+| -------------------------------------------- | ------------------------------------------ | ------------------------------ | ------------------------------------------ |
+| ![desktop-home](./preview/desktop-home.webp) | ![mobile-home](./preview/mobile-home.webp) | ![panel](./preview/panel.webp) | ![create-site](./preview/create-site.webp) |
+
 
 </details>
 
@@ -178,7 +177,7 @@ bun run preview
 
 > 以下数据基于 `bun run build && bun run preview`（生产构建），用 Chrome Lighthouse 测量。
 
-![lighthouse](./preview/lighthouse.webp)
+<img src="./preview/lighthouse.webp" alt="lighthouse" style="width: 400px;" />
 
 | 指标              | 数值   | 说明                                    |
 | ----------------- | ------ | --------------------------------------- |
@@ -194,9 +193,9 @@ bun run preview
 
 ## 待办规划
 
-- [] 实现 iNav 管理后台页面
-- [] 实现自定义分类
-- [] ...
+- [ ] 实现 iNav 管理后台页面
+- [ ] 实现自定义分类
+- [ ] ...
 
 新功能及建议欢迎提 [Issue](../issues)，如果一拍即合，就会加入规划事项 = =。
 
