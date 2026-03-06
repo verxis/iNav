@@ -51,6 +51,87 @@
 		"pinned": true
 	},
 	{
+		"id": "gemini",
+		"name": "Gemini",
+		"url": "https://gemini.google.com",
+		"description": "Google 出品的多模态大模型，支持代码、图像、搜索 Deep Research 等",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=gemini.google.com",
+		"category": "AI",
+		"pinned": true
+	},
+	{
+		"id": "grok",
+		"name": "Grok",
+		"url": "https://grok.com",
+		"description": "xAI 出品，接入 X 实时数据，擅长聊天、推理和代码生成",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=grok.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "kimi",
+		"name": "Kimi",
+		"url": "https://www.kimi.com",
+		"description": "月之暗面出品，长文档阅读和深度研究能力突出，支持多文件分析",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.kimi.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "deepseek",
+		"name": "DeepSeek",
+		"url": "https://chat.deepseek.com",
+		"description": "国产高性价比大模型，推理和编程能力强，适合日常问答和代码辅助",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=chat.deepseek.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "minimax",
+		"name": "MiniMax Agent",
+		"url": "https://agent.minimaxi.com",
+		"description": "MiniMax 官方智能助手，基于 M2 系列模型，支持多轮对话和多模态",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=agent.minimaxi.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "glm",
+		"name": "智谱清言（GLM）",
+		"url": "https://chatglm.cn",
+		"description": "智谱 AI 出品的对话助手，基于 GLM 系列模型，支持中英双语与代码",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=chatglm.cn",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "qwen",
+		"name": "通义千问（Qwen）",
+		"url": "https://chat.qwen.ai",
+		"description": "阿里通义千问官方聊天入口，支持长上下文、多模态和 Agent 能力",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=chat.qwen.ai",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "doubao",
+		"name": "豆包",
+		"url": "https://www.doubao.com",
+		"description": "字节跳动旗下通用 AI 助手，支持聊天、写作、代码和多应用插件",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.doubao.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
+		"id": "yiyan",
+		"name": "文心一言",
+		"url": "https://yiyan.baidu.com",
+		"description": "百度出品的文心大模型应用，支持中文写作、搜索问答和多模态理解",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=yiyan.baidu.com",
+		"category": "AI",
+		"pinned": false
+	},
+	{
 		"id": "v0",
 		"name": "v0.dev",
 		"url": "https://v0.dev",
@@ -287,5 +368,173 @@
 		"description": "在线正则表达式调试工具，支持实时匹配高亮和解释",
 		"iconUrl": "https://ico.dogxi.me/icon?domain=regex101.com",
 		"category": "效率"
+	},
+	{
+		"id": "github-weekly-rank",
+		"name": "GitHub 每周飙升榜",
+		"url": "https://github.com/OpenGithubs/github-weekly-rank",
+		"description": "追踪 GitHub 每周 Star 飙升的热门开源项目，快速发现新玩具和新技术",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "github-monthly-rank",
+		"name": "GitHub 每月飙升榜",
+		"url": "https://github.com/OpenGithubs/github-monthly-rank",
+		"description": "按月统计 GitHub 飙升项目 Top 30，适合每月扫一轮灵感和新框架",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "gemini-cli",
+		"name": "Gemini CLI",
+		"url": "https://github.com/google-gemini/gemini-cli",
+		"description": "Google 开源的命令行智能代理，在终端里和 Gemini 聊天、改代码、跑命令",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "autogpt",
+		"name": "AutoGPT",
+		"url": "https://github.com/Significant-Gravitas/AutoGPT",
+		"description": "早期爆火的多步骤 AI 代理框架，给一个目标就会自己拆解任务去完成",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "dify",
+		"name": "Dify",
+		"url": "https://github.com/langgenius/dify",
+		"description": "开源 AI 应用平台，拖拖拽拽就能搭问答、Agent、工作流，也支持自部署",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "open-webui",
+		"name": "Open WebUI",
+		"url": "https://github.com/open-webui/open-webui",
+		"description": "热门的本地/自建 AI Web 前端，对接各类大模型，做自己的 ChatGPT 网页版",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "tabbyml",
+		"name": "Tabby",
+		"url": "https://github.com/TabbyML/tabby",
+		"description": "开源的 AI 代码助手，类似 Copilot，可以自部署，支持多种编辑器",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开发工具"
+	},
+	{
+		"id": "cursor",
+		"name": "Cursor",
+		"url": "https://www.cursor.com",
+		"description": "AI IDE，和 GPT / Claude 深度集成，写前端和全栈都很顺手",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=cursor.com",
+		"category": "开发工具"
+	},
+	{
+		"id": "vscode-copilot",
+		"name": "GitHub Copilot",
+		"url": "https://github.com/features/copilot",
+		"description": "GitHub 官方 AI 编程助手，VS Code / JetBrains 都能用，补全和解释代码很好用",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开发工具"
+	},
+	{
+		"id": "deepseek-github",
+		"name": "DeepSeek 开源模型",
+		"url": "https://github.com/deepseek-ai",
+		"description": "DeepSeek 官方 GitHub，包含 V2/V3、R1 等系列开源模型与示例",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "deepseek-docs",
+		"name": "DeepSeek 文档",
+		"url": "https://chat.deepseek.com",
+		"description": "DeepSeek 官方站，文档、在线体验和 API 入口，高性价比大模型代表",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=chat.deepseek.com",
+		"category": "AI"
+	},
+	{
+		"id": "minimax-platform",
+		"name": "MiniMax 平台",
+		"url": "https://www.minimaxi.com",
+		"description": "MiniMax 官方开放平台，M2.5 / M2-her 模型、Agent、语音和视频一站打包",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.minimaxi.com",
+		"category": "AI"
+	},
+	{
+		"id": "glama-mcp",
+		"name": "Glama MCP 列表",
+		"url": "https://glama.ai/mcp/servers",
+		"description": "整理 MCP 生态里的各种工具服务（文件、浏览器、第三方 API），适合玩 Claude Code / Agent",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=glama.ai",
+		"category": "开源项目"
+	},
+	{
+		"id": "stateofjs",
+		"name": "State of JS",
+		"url": "https://stateofjs.com/en-US",
+		"description": "每年一次的 JS 生态调查，选框架/工具前看看大家现在都在用什么",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=stateofjs.com",
+		"category": "学习"
+	},
+	{
+		"id": "stateofcss",
+		"name": "State of CSS",
+		"url": "https://stateofcss.com/en-US",
+		"description": "CSS 生态年度调查，了解当前流行的 CSS 框架、工具和语法特性",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=stateofcss.com",
+		"category": "学习"
+	},
+	{
+		"id": "stateofai-dev",
+		"name": "State of AI Dev",
+		"url": "https://stateofai.dev/en-US",
+		"description": "围绕 AI 开发工具、框架、云服务的年度问卷，适合看 AI 工具选型趋势",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=stateofai.dev",
+		"category": "学习"
+	},
+	{
+		"id": "remotion",
+		"name": "Remotion",
+		"url": "https://www.remotion.dev",
+		"description": "用 React 写视频的开源框架，可以和各类 AI 模型结合自动出片",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.remotion.dev",
+		"category": "开源项目"
+	},
+	{
+		"id": "manim",
+		"name": "Manim",
+		"url": "https://github.com/ManimCommunity/manim",
+		"description": "数学动画引擎，很多科普视频用它做动画，用代码描述动画逻辑",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "docling",
+		"name": "Docling",
+		"url": "https://github.com/DS4SD/docling",
+		"description": "文档解析与结构化工具，适合做 RAG 前的 PDF / Office 清洗和分段",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "coolify",
+		"name": "Coolify",
+		"url": "https://github.com/coollabsio/coolify",
+		"description": "自部署版 Heroku / Vercel 替代方案，一键部署前后端和数据库",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "开源项目"
+	},
+	{
+		"id": "cursor-ai-docs",
+		"name": "Cursor 文档",
+		"url": "https://docs.cursor.com",
+		"description": "Cursor 官方文档，记录各种 AI 编程功能和快捷用法",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=docs.cursor.com",
+		"category": "文档参考"
 	}
 ]
