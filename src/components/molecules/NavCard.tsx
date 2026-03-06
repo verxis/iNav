@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Badge } from '@/components/atoms/Badge'
 import {
 	CopyIcon,
@@ -14,6 +14,7 @@ import {
 	useContextMenu,
 } from '@/components/molecules/ContextMenu'
 import { ALLOW_HIDE_BUILTIN } from '@/config/features'
+import { useIsIOS } from '@/hooks/useIsIOS'
 import type { SiteCardProps } from '@/types'
 
 function hashString(str: string): number {
@@ -215,6 +216,8 @@ export function NavCard({
 
 	const [copied, setCopied] = useState(false)
 
+	const isIOS = useIsIOS()
+
 	const {
 		menuState,
 		onContextMenu,
@@ -222,19 +225,54 @@ export function NavCard({
 		onTouchEnd,
 		onTouchMove,
 		closeMenu,
+		openAt,
 	} = useContextMenu()
 
+	// iOS three-dot button ref — used to compute menu anchor position on open
+	const dotsBtnRef = useRef<HTMLButtonElement>(null)
+	// Track whether the touch moved (scroll) so we don't open on scroll-end
+	const dotsTouchMoved = useRef(false)
+
+	const openIOSMenu = useCallback(() => {
+		const btn = dotsBtnRef.current
+		if (!btn) return
+		const rect = btn.getBoundingClientRect()
+		// right-align menu below the button; ContextMenu will flip up if needed
+		openAt(rect.right, rect.bottom + 4)
+	}, [openAt])
+
 	const handleCopy = useCallback(
-		async (e?: React.MouseEvent) => {
+		(e?: React.MouseEvent) => {
 			e?.preventDefault()
 			e?.stopPropagation()
-			try {
-				await navigator.clipboard.writeText(url)
+
+			// iOS Safari requires clipboard access inside a synchronous user-gesture
+			// handler. execCommand('copy') works synchronously; fall back to the
+			// async Clipboard API on platforms that have removed execCommand.
+			const copySync = () => {
+				const ta = document.createElement('textarea')
+				ta.value = url
+				ta.style.cssText =
+					'position:fixed;top:0;left:0;opacity:0;pointer-events:none'
+				document.body.appendChild(ta)
+				ta.focus()
+				ta.select()
+				const ok = document.execCommand('copy')
+				document.body.removeChild(ta)
+				return ok
+			}
+
+			if (copySync()) {
 				setCopied(true)
 				setTimeout(() => setCopied(false), 1500)
-			} catch {
-				// clipboard 不可用时静默失败
+				return
 			}
+
+			// Async fallback (desktop browsers that dropped execCommand)
+			navigator.clipboard?.writeText(url).then(() => {
+				setCopied(true)
+				setTimeout(() => setCopied(false), 1500)
+			})
 		},
 		[url],
 	)
@@ -305,11 +343,68 @@ export function NavCard({
 				]
 					.filter(Boolean)
 					.join(' ')}
-				onContextMenu={onContextMenu}
-				onTouchStart={onTouchStart}
-				onTouchEnd={onTouchEnd}
-				onTouchMove={onTouchMove}
+				style={{
+					WebkitTouchCallout: 'none',
+					userSelect: 'none',
+					touchAction: 'manipulation',
+				}}
+				onContextMenu={isIOS ? undefined : onContextMenu}
+				onTouchStart={isIOS ? undefined : onTouchStart}
+				onTouchEnd={isIOS ? undefined : onTouchEnd}
+				onTouchMove={isIOS ? undefined : onTouchMove}
 			>
+				{/* iOS-only: three-dot menu button, always visible in top-right */}
+				{isIOS && contextActions.length > 0 && (
+					<button
+						ref={dotsBtnRef}
+						type="button"
+						aria-label="更多操作"
+						aria-haspopup="menu"
+						aria-expanded={menuState.open}
+						onTouchStart={() => {
+							dotsTouchMoved.current = false
+						}}
+						onTouchMove={() => {
+							dotsTouchMoved.current = true
+						}}
+						onTouchEnd={(e) => {
+							// Only open if the finger didn't scroll away
+							if (dotsTouchMoved.current) return
+							e.preventDefault() // prevent ghost click on card beneath
+							e.stopPropagation()
+							openIOSMenu()
+						}}
+						onClick={(e) => {
+							// Fallback for non-touch iOS (e.g. iPad with mouse)
+							e.preventDefault()
+							e.stopPropagation()
+							openIOSMenu()
+						}}
+						className="
+							absolute top-2 right-2 z-10
+							flex items-center justify-center
+							h-6 w-6 rounded-md
+							text-muted-foreground
+							bg-surface/80 backdrop-blur-sm
+							border border-border/60
+							transition-colors duration-100
+							active:bg-muted
+							focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary
+						"
+					>
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="currentColor"
+							aria-hidden="true"
+						>
+							<circle cx="5" cy="12" r="2" />
+							<circle cx="12" cy="12" r="2" />
+							<circle cx="19" cy="12" r="2" />
+						</svg>
+					</button>
+				)}
 				<div className="flex items-center gap-2.5">
 					<SiteIcon name={name} iconUrl={iconUrl} />
 

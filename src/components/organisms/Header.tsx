@@ -134,8 +134,17 @@ function InfoPopover({ siteCount }: InfoPopoverProps) {
 						</div>
 					</div>
 
-					{/* 站点数量 */}
+					{/* 版本信息及站点数量 */}
 					<div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+						<span className="text-xs text-muted-foreground">版本</span>
+						<a
+							className="text-xs font-medium text-muted-foreground tabular-nums"
+							href="https://github.com/dogxii/inav"
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							v{import.meta.env.APP_VERSION}
+						</a>
 						<span className="text-xs text-muted-foreground">收录站点</span>
 						<span className="text-sm font-semibold text-foreground tabular-nums">
 							{siteCount}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
 	CopyIcon,
 	EditIcon,
@@ -31,29 +32,59 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 	const firstItemRef = useRef<HTMLButtonElement>(null)
 
 	const MENU_WIDTH = 176
-	const MENU_ITEM_HEIGHT = 32
-	const MENU_PADDING = 8
+	const MENU_ITEM_HEIGHT = 36
+	const MENU_PADDING = 4
 	const estimatedHeight = actions.length * MENU_ITEM_HEIGHT + MENU_PADDING * 2
 
-	const safeX = Math.min(x, window.innerWidth - MENU_WIDTH - 8)
-	const safeY = Math.min(y, window.innerHeight - estimatedHeight - 8)
+	// Right-align: menu right edge = x; flip left if too close to right edge
+	const left = Math.max(
+		8,
+		Math.min(x - MENU_WIDTH, window.innerWidth - MENU_WIDTH - 8),
+	)
 
+	// Open below by default; flip above if not enough room at bottom
+	const openBelow = y + estimatedHeight + 8 < window.innerHeight
+	const top = openBelow ? y : Math.max(8, y - estimatedHeight - 4)
+
+	// Focus first item on open
 	useEffect(() => {
 		requestAnimationFrame(() => {
 			firstItemRef.current?.focus()
 		})
 	}, [])
 
+	// Close on click/touch outside — touchstart with preventDefault so the
+	// card beneath doesn't get activated on iOS
 	useEffect(() => {
-		const handler = (e: MouseEvent) => {
-			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+		const handlePointer = (e: MouseEvent | TouchEvent) => {
+			const target = e instanceof TouchEvent ? e.touches[0]?.target : e.target
+			if (menuRef.current && !menuRef.current.contains(target as Node)) {
+				if (e instanceof TouchEvent) e.preventDefault()
 				onClose()
 			}
 		}
-		document.addEventListener('mousedown', handler, true)
-		return () => document.removeEventListener('mousedown', handler, true)
+		document.addEventListener('mousedown', handlePointer, true)
+		document.addEventListener('touchstart', handlePointer, {
+			capture: true,
+			passive: false,
+		})
+		return () => {
+			document.removeEventListener('mousedown', handlePointer, true)
+			document.removeEventListener('touchstart', handlePointer, {
+				capture: true,
+			} as EventListenerOptions)
+		}
 	}, [onClose])
 
+	// Close on scroll (non-anchored — position is a snapshot)
+	useEffect(() => {
+		const handler = () => onClose()
+		window.addEventListener('scroll', handler, { passive: true, capture: true })
+		return () =>
+			window.removeEventListener('scroll', handler, { capture: true })
+	}, [onClose])
+
+	// Keyboard navigation
 	useEffect(() => {
 		const handler = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
@@ -61,7 +92,6 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 				onClose()
 				return
 			}
-
 			if (!menuRef.current) return
 			const items = Array.from(
 				menuRef.current.querySelectorAll<HTMLButtonElement>(
@@ -70,7 +100,6 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 			)
 			const current = document.activeElement as HTMLButtonElement
 			const idx = items.indexOf(current)
-
 			if (e.key === 'ArrowDown') {
 				e.preventDefault()
 				items[(idx + 1) % items.length]?.focus()
@@ -83,19 +112,13 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 		return () => document.removeEventListener('keydown', handler)
 	}, [onClose])
 
-	useEffect(() => {
-		const handler = () => onClose()
-		window.addEventListener('scroll', handler, { passive: true })
-		return () => window.removeEventListener('scroll', handler)
-	}, [onClose])
-
-	return (
+	const menu = (
 		<div
 			ref={menuRef}
 			role="menu"
 			aria-label="站点操作"
 			className="
-				fixed z-250
+				fixed z-9999
 				w-44
 				bg-surface border border-border
 				rounded-lg shadow-lg
@@ -103,7 +126,7 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 				animate-in
 				py-1
 			"
-			style={{ left: safeX, top: safeY }}
+			style={{ left, top }}
 			onContextMenu={(e) => e.preventDefault()}
 		>
 			{actions.map((action, index) => (
@@ -136,6 +159,9 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 			))}
 		</div>
 	)
+
+	// Portal to body so stacking context / overflow:hidden on card never clips it
+	return createPortal(menu, document.body)
 }
 
 export interface ContextMenuState {
@@ -151,6 +177,8 @@ export interface UseContextMenuReturn {
 	onTouchEnd: () => void
 	onTouchMove: () => void
 	closeMenu: () => void
+	/** Open the menu at an explicit viewport coordinate (e.g. from iOS three-dot button). */
+	openAt: (x: number, y: number) => void
 }
 
 export function useContextMenu(): UseContextMenuReturn {
@@ -176,35 +204,54 @@ export function useContextMenu(): UseContextMenuReturn {
 		openMenu(e.clientX, e.clientY)
 	}
 
+	const clearLongPress = () => {
+		if (longPressTimer.current) {
+			clearTimeout(longPressTimer.current)
+			longPressTimer.current = null
+		}
+	}
+
+	// touchcancel fires on Safari iOS when the system takes over the touch
+	useEffect(() => {
+		const handler = () => {
+			if (longPressTimer.current) {
+				clearTimeout(longPressTimer.current)
+				longPressTimer.current = null
+			}
+		}
+		document.addEventListener('touchcancel', handler, { passive: true })
+		return () => document.removeEventListener('touchcancel', handler)
+	}, [])
+
 	const onTouchStart = (e: React.TouchEvent) => {
 		touchMoved.current = false
 		const touch = e.touches[0]
 		if (!touch) return
-
 		const x = touch.clientX
 		const y = touch.clientY
-
 		longPressTimer.current = setTimeout(() => {
 			if (!touchMoved.current) openMenu(x, y)
-		}, 600)
+		}, 500)
 	}
 
 	const onTouchEnd = () => {
-		if (longPressTimer.current) {
-			clearTimeout(longPressTimer.current)
-			longPressTimer.current = null
-		}
+		clearLongPress()
 	}
 
 	const onTouchMove = () => {
 		touchMoved.current = true
-		if (longPressTimer.current) {
-			clearTimeout(longPressTimer.current)
-			longPressTimer.current = null
-		}
+		clearLongPress()
 	}
 
-	return { menuState, onContextMenu, onTouchStart, onTouchEnd, onTouchMove, closeMenu }
+	return {
+		menuState,
+		onContextMenu,
+		onTouchStart,
+		onTouchEnd,
+		onTouchMove,
+		closeMenu,
+		openAt: openMenu,
+	}
 }
 
 export interface SiteActionCallbacks {

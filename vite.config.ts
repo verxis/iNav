@@ -1,10 +1,20 @@
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+const pkg = JSON.parse(
+	readFileSync(new URL('./package.json', import.meta.url), 'utf-8'),
+)
+
 export default defineConfig({
 	plugins: [react(), tailwindcss()],
+
+	define: {
+		// Injected at build time; access via import.meta.env.APP_VERSION
+		'import.meta.env.APP_VERSION': JSON.stringify(pkg.version),
+	},
 
 	resolve: {
 		alias: {
