@@ -5,7 +5,7 @@ import {
 	SearchIcon,
 	XIcon,
 } from '@/components/atoms/Icons'
-import { CATEGORY_COLOR } from '@/data/categories'
+import { getCategoryColor } from '@/data/categories'
 import type { Site, SiteCategory } from '@/types'
 
 /* ============================================================
@@ -74,7 +74,7 @@ function searchSites(sites: Site[], query: string): Site[] {
 // ---- 分类颜色 ----
 
 function CategoryDot({ category }: { category: SiteCategory }) {
-	const color = CATEGORY_COLOR[category] ?? 'text-gray-400'
+	const color = getCategoryColor(category)
 	return (
 		<span
 			className={`inline-block w-1.5 h-1.5 rounded-full bg-current shrink-0 ${color}`}

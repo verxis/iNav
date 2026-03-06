@@ -1,8 +1,4 @@
-/**
- * Single source of truth for site categories.
- * To add / rename / remove a category, only edit SITE_CATEGORIES here.
- * The SiteCategory type in types/index.ts is derived from this array automatically.
- */
+/** 站点分类列表 */
 export const SITE_CATEGORIES = [
 	'AI',
 	'开源项目',
@@ -10,6 +6,8 @@ export const SITE_CATEGORIES = [
 	'设计',
 	'文档参考',
 	'学习',
+	'博客',
+	'社区',
 	'效率',
 	'娱乐',
 	'其他',
@@ -17,15 +15,25 @@ export const SITE_CATEGORIES = [
 
 export type SiteCategory = (typeof SITE_CATEGORIES)[number]
 
-/** Color classes for each category, used in CommandPalette and anywhere else. */
-export const CATEGORY_COLOR: Record<SiteCategory, string> = {
-	AI: 'text-violet-500',
-	开源项目: 'text-emerald-500',
-	开发工具: 'text-blue-500',
-	设计: 'text-pink-500',
-	文档参考: 'text-amber-500',
-	学习: 'text-green-500',
-	效率: 'text-cyan-500',
-	娱乐: 'text-orange-500',
-	其他: 'text-gray-400',
+/** 命令面板中分类匹配颜色 */
+const CATEGORY_PALETTE = [
+	'text-violet-500',
+	'text-blue-500',
+	'text-emerald-500',
+	'text-pink-500',
+	'text-amber-500',
+	'text-cyan-500',
+	'text-orange-500',
+	'text-green-500',
+	'text-teal-500',
+	'text-rose-500',
+	'text-indigo-500',
+	'text-yellow-500',
+] as const
+
+/** 根据分类数组下标取颜色 */
+export function getCategoryColor(category: string): string {
+	const idx = SITE_CATEGORIES.indexOf(category as SiteCategory)
+	if (idx === -1) return 'text-gray-400'
+	return CATEGORY_PALETTE[idx % CATEGORY_PALETTE.length] ?? 'text-gray-400'
 }

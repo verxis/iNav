@@ -9,6 +9,30 @@
 		"pinned": true
 	},
 	{
+		"id": "dogxi-blog",
+		"name": "Dogxi 的狗窝",
+		"url": "https://blog.dogxi.me",
+		"description": "Dogxi 的个人博客",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=dogxi.me",
+		"category": "博客"
+	},
+	{
+		"id": "Viki-blog",
+		"name": "Viki 写东西的地方",
+		"url": "https://blog.viki.moe",
+		"description": "Viki 的个人博客，记录前端开发与生活点滴。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=blog.viki.moe",
+		"category": "博客"
+	},
+	{
+		"id": "ruanyifeng-blog",
+		"name": "阮一峰的网络日志",
+		"url": "https://www.ruanyifeng.com/blog/",
+		"description": "阮一峰的网络日志。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.ruanyifeng.com",
+		"category": "博客"
+	},
+	{
 		"id": "chatgpt",
 		"name": "ChatGPT",
 		"url": "https://chat.openai.com",
@@ -134,6 +158,54 @@
 		"description": "Tailwind 官方文档，类名查询和配置参考",
 		"iconUrl": "https://ico.dogxi.me/icon?domain=tailwindcss.com",
 		"category": "文档参考"
+	},
+	{
+		"id": "icover",
+		"name": "iCover",
+		"url": "https://cover.dogxi.me",
+		"description": "快速生成炫酷亮/暗色的 README 封面拼接图",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=cover.dogxi.me",
+		"category": "开源项目"
+	},
+	{
+		"id": "isticker",
+		"name": "iSticker",
+		"url": "https://sticker.dogxi.me",
+		"description": "贴纸拼板生成，打印制作你的专属贴纸",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=sticker.dogxi.me",
+		"category": "开源项目"
+	},
+	{
+		"id": "60s-api",
+		"name": "60s API",
+		"url": "https://60s.viki.moe",
+		"description": "一系列 高质量、开源、可靠、全球 CDN 加速 的开放 API 集合",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com/vikiboss/60s",
+		"category": "开源项目"
+	},
+	{
+		"id": "v2ex",
+		"name": "V2EX",
+		"url": "https://v2ex.com",
+		"description": "创意工作者的社区。讨论编程、设计、硬件、游戏等令人激动的话题。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=v2ex.com",
+		"category": "社区"
+	},
+	{
+		"id": "linux-do",
+		"name": "LINUX DO - 新的理想型社区",
+		"url": "https://linux.do",
+		"description": "Where possible begins.",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=linux.do",
+		"category": "社区"
+	},
+	{
+		"id": "hello-github",
+		"name": "HelloGitHub - 有趣的开源社区",
+		"url": "https://hellogithub.com",
+		"description": "HelloGitHub 开源社区，专注于发现和分享有趣、入门级的开源项目。在这里，探索开源技术解决方案，体验开源的乐趣，自荐或推荐开源项目，开启你的开源之旅。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=hellogithub.com",
+		"category": "社区"
 	},
 	{
 		"id": "typescript-docs",
