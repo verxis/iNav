@@ -6,25 +6,15 @@ import {
 	ExternalLinkIcon,
 	PinIcon,
 	PinOffIcon,
+	TrashIcon,
 } from '@/components/atoms/Icons'
 import {
-	ContextMenu,
 	buildSiteActions,
+	ContextMenu,
 	useContextMenu,
 } from '@/components/molecules/ContextMenu'
+import { ALLOW_HIDE_BUILTIN } from '@/config/features'
 import type { SiteCardProps } from '@/types'
-
-/* ============================================================
-   NavCard
-   - 扁平化卡片设计（无阴影，hover 边框高亮）
-   - 右键 / 长按弹出上下文菜单（编辑、置顶、删除、复制链接）
-   - Hover 时显示快捷操作按钮
-   - 搜索关键词高亮
-   - 来源标记（imported / custom）
-   - 置顶标记
-   ============================================================ */
-
-// ---- 工具函数 ----
 
 function hashString(str: string): number {
 	let hash = 0
@@ -46,10 +36,10 @@ const AVATAR_COLORS = [
 ]
 
 function getAvatarStyle(name: string) {
-	return AVATAR_COLORS[hashString(name) % AVATAR_COLORS.length] ?? AVATAR_COLORS[0]
+	return (
+		AVATAR_COLORS[hashString(name) % AVATAR_COLORS.length] ?? AVATAR_COLORS[0]
+	)
 }
-
-// ---- 搜索高亮 ----
 
 function highlightText(text: string, query: string): React.ReactNode {
 	if (!query.trim()) return text
@@ -73,8 +63,6 @@ function highlightText(text: string, query: string): React.ReactNode {
 	}
 }
 
-// ---- SiteIcon ----
-
 interface SiteIconProps {
 	name: string
 	iconUrl?: string
@@ -82,45 +70,67 @@ interface SiteIconProps {
 }
 
 function SiteIcon({ name, iconUrl, size = 'md' }: SiteIconProps) {
-	const [err, setErr] = useState(false)
+	const [imgOk, setImgOk] = useState(false)
+
 	const initial = [...name][0]?.toUpperCase() ?? '?'
 	const style = getAvatarStyle(name)
 	const dim = size === 'md' ? 'h-8 w-8' : 'h-6 w-6'
 	const textSize = size === 'md' ? 'text-sm' : 'text-xs'
+	const px = size === 'md' ? 32 : 24
 
-	if (!iconUrl || err) {
-		return (
-			<div
-				className={[
-					'flex items-center justify-center shrink-0 rounded-lg select-none',
-					dim,
-					style.bg,
-					style.text,
-					textSize,
-					'font-semibold',
-				].join(' ')}
-				aria-hidden="true"
-			>
-				{initial}
-			</div>
-		)
-	}
+	const avatar = (
+		<div
+			className={[
+				'flex items-center justify-center shrink-0 rounded-lg select-none',
+				dim,
+				style.bg,
+				style.text,
+				textSize,
+				'font-semibold',
+			].join(' ')}
+			aria-hidden="true"
+		>
+			{initial}
+		</div>
+	)
+
+	if (!iconUrl) return avatar
 
 	return (
-		<img
-			src={iconUrl}
-			alt=""
-			width={size === 'md' ? 32 : 24}
-			height={size === 'md' ? 32 : 24}
-			className={[dim, 'shrink-0 rounded-lg object-contain'].join(' ')}
-			onError={() => setErr(true)}
-			loading="lazy"
-			decoding="async"
-		/>
+		<div className={`${dim} relative shrink-0`}>
+			{!imgOk && (
+				<div
+					className={[
+						'absolute inset-0 flex items-center justify-center rounded-lg select-none',
+						style.bg,
+						style.text,
+						textSize,
+						'font-semibold',
+					].join(' ')}
+					aria-hidden="true"
+				>
+					{initial}
+				</div>
+			)}
+			<img
+				key={iconUrl}
+				src={iconUrl}
+				alt=""
+				width={px}
+				height={px}
+				className={[
+					'w-full h-full rounded-lg object-contain',
+					'transition-opacity duration-150',
+					imgOk ? 'opacity-100' : 'opacity-0',
+				].join(' ')}
+				onLoad={() => setImgOk(true)}
+				onError={() => setImgOk(false)}
+				loading="eager"
+				decoding="async"
+			/>
+		</div>
 	)
 }
-
-// ---- 来源标记 ----
 
 function SourceBadge({ source }: { source?: string }) {
 	if (source === 'imported') {
@@ -137,7 +147,6 @@ function SourceBadge({ source }: { source?: string }) {
 				className="inline-flex items-center gap-0.5 text-[10px] leading-none"
 				style={{ color: '#22c55e' }}
 				title="自定义站点"
-				aria-label="自定义站点"
 			>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -163,8 +172,6 @@ function SourceBadge({ source }: { source?: string }) {
 	}
 	return null
 }
-
-// ---- 快捷操作按钮（hover 时显示） ----
 
 interface QuickActionProps {
 	icon: React.ReactNode
@@ -195,8 +202,6 @@ function QuickAction({ icon, label, onClick, destructive }: QuickActionProps) {
 	)
 }
 
-// ---- 主组件 ----
-
 export function NavCard({
 	site,
 	className = '',
@@ -210,10 +215,15 @@ export function NavCard({
 
 	const [copied, setCopied] = useState(false)
 
-	const { menuState, onContextMenu, onTouchStart, onTouchEnd, onTouchMove, closeMenu } =
-		useContextMenu()
+	const {
+		menuState,
+		onContextMenu,
+		onTouchStart,
+		onTouchEnd,
+		onTouchMove,
+		closeMenu,
+	} = useContextMenu()
 
-	// 复制 URL
 	const handleCopy = useCallback(
 		async (e?: React.MouseEvent) => {
 			e?.preventDefault()
@@ -229,7 +239,6 @@ export function NavCard({
 		[url],
 	)
 
-	// 编辑
 	const handleEdit = useCallback(
 		(e?: React.MouseEvent) => {
 			e?.preventDefault()
@@ -239,7 +248,6 @@ export function NavCard({
 		[site, onEdit],
 	)
 
-	// 删除
 	const handleDelete = useCallback(
 		(e?: React.MouseEvent) => {
 			e?.preventDefault()
@@ -249,7 +257,6 @@ export function NavCard({
 		[site, onDelete],
 	)
 
-	// 置顶切换
 	const handleTogglePin = useCallback(
 		(e?: React.MouseEvent) => {
 			e?.preventDefault()
@@ -259,19 +266,28 @@ export function NavCard({
 		[site, onTogglePin],
 	)
 
-	// 上下文菜单动作列表
+	const canEdit = source === 'custom' || source === 'imported'
+	const isBuiltin = source === 'builtin'
+
 	const contextActions = buildSiteActions(
 		{ url, pinned, source },
 		{
 			onOpen: () => window.open(url, '_blank', 'noopener,noreferrer'),
 			onCopyUrl: () => handleCopy(),
-			onEdit: onEdit ? () => handleEdit() : undefined,
-			onTogglePin: onTogglePin ? () => handleTogglePin() : undefined,
-			onDelete: onDelete ? () => handleDelete() : undefined,
+			onEdit: onEdit && canEdit ? () => handleEdit() : undefined,
+			// builtin 站点不在右键菜单中提供 pin
+			onTogglePin:
+				onTogglePin && !isBuiltin ? () => handleTogglePin() : undefined,
+			// builtin 站点：右键菜单提供"本地隐藏"；custom/imported：右键菜单提供"删除"
+			onDelete: onDelete
+				? isBuiltin && ALLOW_HIDE_BUILTIN
+					? () => handleDelete()
+					: canEdit
+						? () => handleDelete()
+						: undefined
+				: undefined,
 		},
 	)
-
-	const canEdit = source === 'custom' || source === 'imported'
 
 	return (
 		<>
@@ -294,21 +310,18 @@ export function NavCard({
 				onTouchEnd={onTouchEnd}
 				onTouchMove={onTouchMove}
 			>
-				{/* 图标 + 名称行 */}
 				<div className="flex items-center gap-2.5">
 					<SiteIcon name={name} iconUrl={iconUrl} />
 
 					<div className="min-w-0 flex-1">
 						<div className="flex items-center gap-1.5 min-w-0">
-							<h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-100 leading-snug">
+							<span className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-100 leading-snug">
 								{highlightText(name, searchQuery)}
-							</h3>
-							{/* hover 时出现外链图标 */}
+							</span>
 							<span className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-50 transition-opacity duration-100">
 								<ExternalLinkIcon size={10} />
 							</span>
 						</div>
-						{/* 置顶 + 来源标记 */}
 						{(pinned || source === 'imported' || source === 'custom') && (
 							<div className="flex items-center gap-1 mt-0.5">
 								{pinned && (
@@ -321,7 +334,6 @@ export function NavCard({
 						)}
 					</div>
 
-					{/* Hover 时的快捷操作区 */}
 					<div
 						className="
 							shrink-0 flex items-center gap-0.5
@@ -329,82 +341,125 @@ export function NavCard({
 							transition-opacity duration-100
 						"
 						onClick={(e) => e.preventDefault()}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') e.preventDefault()
+						}}
+						role="toolbar"
+						aria-label="快捷操作"
 					>
-						{/* 复制链接 */}
-						<QuickAction
-							icon={
-								copied ? (
-									<svg
-										width="12"
-										height="12"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2.5"
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										aria-hidden="true"
-									>
-										<polyline points="20 6 9 17 4 12" />
-									</svg>
-								) : (
-									<CopyIcon size={12} />
-								)
-							}
-							label={copied ? '已复制' : '复制链接'}
-							onClick={handleCopy}
-						/>
+						{/* builtin：复制 + 隐藏 */}
+						{isBuiltin && (
+							<>
+								<QuickAction
+									icon={
+										copied ? (
+											<svg
+												width="12"
+												height="12"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2.5"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												aria-hidden="true"
+											>
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+										) : (
+											<CopyIcon size={12} />
+										)
+									}
+									label={copied ? '已复制' : '复制链接'}
+									onClick={handleCopy}
+								/>
 
-						{/* 编辑（仅 custom / imported） */}
-						{onEdit && canEdit && (
-							<QuickAction
-								icon={<EditIcon size={12} />}
-								label="编辑"
-								onClick={handleEdit}
-							/>
+								{onDelete && ALLOW_HIDE_BUILTIN && (
+									<QuickAction
+										icon={<TrashIcon size={12} />}
+										label="本地隐藏"
+										onClick={handleDelete}
+										destructive
+									/>
+								)}
+							</>
 						)}
 
-						{/* 置顶切换 */}
-						{onTogglePin && (
-							<QuickAction
-								icon={
-									pinned ? <PinOffIcon size={12} /> : <PinIcon size={12} />
-								}
-								label={pinned ? '取消置顶' : '置顶'}
-								onClick={handleTogglePin}
-							/>
+						{/* custom / imported：复制 + 编辑 + pin */}
+						{!isBuiltin && (
+							<>
+								<QuickAction
+									icon={
+										copied ? (
+											<svg
+												width="12"
+												height="12"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												strokeWidth="2.5"
+												strokeLinecap="round"
+												strokeLinejoin="round"
+												aria-hidden="true"
+											>
+												<polyline points="20 6 9 17 4 12" />
+											</svg>
+										) : (
+											<CopyIcon size={12} />
+										)
+									}
+									label={copied ? '已复制' : '复制链接'}
+									onClick={handleCopy}
+								/>
+
+								{onEdit && canEdit && (
+									<QuickAction
+										icon={<EditIcon size={12} />}
+										label="编辑"
+										onClick={handleEdit}
+									/>
+								)}
+
+								{onTogglePin && (
+									<QuickAction
+										icon={
+											pinned ? <PinOffIcon size={12} /> : <PinIcon size={12} />
+										}
+										label={pinned ? '取消置顶' : '置顶'}
+										onClick={handleTogglePin}
+									/>
+								)}
+							</>
 						)}
 					</div>
 				</div>
 
-				{/* 描述 */}
 				<p className="line-clamp-2 text-xs text-muted-foreground leading-relaxed">
 					{highlightText(description, searchQuery)}
 				</p>
 
-				{/* 分类标签 + 快捷键编号 */}
-					<div className="mt-auto flex items-center justify-between pt-0.5">
-						<Badge variant="primary">{category}</Badge>
-						{rank !== undefined && (
-							<span
-								className="
-									inline-flex items-center justify-center
-									h-4 min-w-4 px-1
-									rounded text-[10px] font-semibold tabular-nums leading-none
-									bg-muted text-muted-foreground
-									border border-border
-									select-none
-								"
-								aria-label={`快捷键 Ctrl+${rank}`}
-								title={`Ctrl+${rank} 打开`}
-							>
-								{rank}
-							</span>
-						)}
-					</div>
+				<div className="mt-auto flex items-center justify-between pt-0.5">
+					<Badge variant="primary" className="badge-desktop-md">
+						{category}
+					</Badge>
+					{rank !== undefined && (
+						<span
+							className="
+								inline-flex items-center justify-center
+								h-4 min-w-4 px-1
+								rounded text-[10px] font-semibold tabular-nums leading-none
+								bg-muted text-muted-foreground
+								border border-border
+								select-none
+							"
+							title={`Ctrl+${rank} 打开`}
+						>
+							{rank}
+						</span>
+					)}
+				</div>
 			</a>
 
-			{/* 右键上下文菜单 */}
 			{menuState.open && contextActions.length > 0 && (
 				<ContextMenu
 					x={menuState.x}

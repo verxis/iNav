@@ -7,14 +7,7 @@ import {
 	PinOffIcon,
 	TrashIcon,
 } from '@/components/atoms/Icons'
-
-/* ============================================================
-   ContextMenu
-   右键 / 长按站点卡片时弹出的操作菜单
-   - 自动检测边界，避免溢出屏幕
-   - 点击外部 / Esc 关闭
-   - 键盘可操作（上下方向键 + Enter）
-   ============================================================ */
+import { ALLOW_HIDE_BUILTIN } from '@/config/features'
 
 export interface ContextMenuAction {
 	id: string
@@ -45,14 +38,12 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 	const safeX = Math.min(x, window.innerWidth - MENU_WIDTH - 8)
 	const safeY = Math.min(y, window.innerHeight - estimatedHeight - 8)
 
-	/* ---- 打开时聚焦第一项 ---- */
 	useEffect(() => {
 		requestAnimationFrame(() => {
 			firstItemRef.current?.focus()
 		})
 	}, [])
 
-	/* ---- 点击外部关闭 ---- */
 	useEffect(() => {
 		const handler = (e: MouseEvent) => {
 			if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -63,7 +54,6 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 		return () => document.removeEventListener('mousedown', handler, true)
 	}, [onClose])
 
-	/* ---- Esc 关闭 + 键盘导航 ---- */
 	useEffect(() => {
 		const handler = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') {
@@ -83,19 +73,16 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 
 			if (e.key === 'ArrowDown') {
 				e.preventDefault()
-				const next = items[(idx + 1) % items.length]
-				next?.focus()
+				items[(idx + 1) % items.length]?.focus()
 			} else if (e.key === 'ArrowUp') {
 				e.preventDefault()
-				const prev = items[(idx - 1 + items.length) % items.length]
-				prev?.focus()
+				items[(idx - 1 + items.length) % items.length]?.focus()
 			}
 		}
 		document.addEventListener('keydown', handler)
 		return () => document.removeEventListener('keydown', handler)
 	}, [onClose])
 
-	/* ---- 滚动时关闭 ---- */
 	useEffect(() => {
 		const handler = () => onClose()
 		window.addEventListener('scroll', handler, { passive: true })
@@ -116,10 +103,7 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 				animate-in
 				py-1
 			"
-			style={{
-				left: safeX,
-				top: safeY,
-			}}
+			style={{ left: safeX, top: safeY }}
 			onContextMenu={(e) => e.preventDefault()}
 		>
 			{actions.map((action, index) => (
@@ -153,11 +137,6 @@ export function ContextMenu({ x, y, onClose, actions }: ContextMenuProps) {
 		</div>
 	)
 }
-
-/* ============================================================
-   useContextMenu
-   封装右键 / 长按触发逻辑
-   ============================================================ */
 
 export interface ContextMenuState {
 	open: boolean
@@ -206,9 +185,7 @@ export function useContextMenu(): UseContextMenuReturn {
 		const y = touch.clientY
 
 		longPressTimer.current = setTimeout(() => {
-			if (!touchMoved.current) {
-				openMenu(x, y)
-			}
+			if (!touchMoved.current) openMenu(x, y)
 		}, 600)
 	}
 
@@ -227,20 +204,8 @@ export function useContextMenu(): UseContextMenuReturn {
 		}
 	}
 
-	return {
-		menuState,
-		onContextMenu,
-		onTouchStart,
-		onTouchEnd,
-		onTouchMove,
-		closeMenu,
-	}
+	return { menuState, onContextMenu, onTouchStart, onTouchEnd, onTouchMove, closeMenu }
 }
-
-/* ============================================================
-   buildSiteActions
-   根据站点信息和回调，构建标准右键菜单动作列表
-   ============================================================ */
 
 export interface SiteActionCallbacks {
 	onOpen?: () => void
@@ -274,8 +239,8 @@ export function buildSiteActions(
 		})
 	}
 
-	// 仅自定义站点 / 导入站点可编辑
 	const canEdit = site.source === 'custom' || site.source === 'imported'
+	const isBuiltin = site.source === 'builtin'
 
 	if (callbacks.onEdit && canEdit) {
 		actions.push({
@@ -286,7 +251,7 @@ export function buildSiteActions(
 		})
 	}
 
-	if (callbacks.onTogglePin) {
+	if (callbacks.onTogglePin && !isBuiltin) {
 		actions.push({
 			id: 'pin',
 			label: site.pinned ? '取消置顶' : '置顶',
@@ -295,8 +260,15 @@ export function buildSiteActions(
 		})
 	}
 
-	// 仅自定义 / 导入站点可删除（内置站点不可删除）
-	if (callbacks.onDelete && canEdit) {
+	if (callbacks.onDelete && isBuiltin && ALLOW_HIDE_BUILTIN) {
+		actions.push({
+			id: 'hide',
+			label: '本地隐藏',
+			icon: <TrashIcon size={14} />,
+			destructive: true,
+			onClick: callbacks.onDelete,
+		})
+	} else if (callbacks.onDelete && canEdit) {
 		actions.push({
 			id: 'delete',
 			label: '删除',

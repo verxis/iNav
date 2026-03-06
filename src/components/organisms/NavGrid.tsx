@@ -123,30 +123,44 @@ function SkeletonCard() {
 	)
 }
 
-// ---- 搜索引擎图标（带 fallback） ----
+// ---- 搜索引擎图标 ----
 
 function EngineIcon({ engine }: { engine: SearchEngineConfig }) {
-	const [err, setErr] = useState(false)
+	const { iconUrl, name } = engine
+	const [imgOk, setImgOk] = useState(false)
 
-	if (!engine.iconUrl || err) {
-		return (
-			<span className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg bg-muted text-muted-foreground text-sm font-bold">
-				{engine.name[0]}
-			</span>
-		)
-	}
+	const fallback = (
+		<span className="h-8 w-8 shrink-0 flex items-center justify-center rounded-lg bg-muted text-muted-foreground text-sm font-bold">
+			{name[0]}
+		</span>
+	)
+
+	if (!iconUrl) return fallback
 
 	return (
-		<img
-			src={engine.iconUrl}
-			alt=""
-			width={32}
-			height={32}
-			className="h-8 w-8 shrink-0 rounded-lg object-contain"
-			onError={() => setErr(true)}
-			loading="eager"
-			decoding="async"
-		/>
+		<div className="h-8 w-8 relative shrink-0">
+			{!imgOk && (
+				<span className="absolute inset-0 flex items-center justify-center rounded-lg bg-muted text-muted-foreground text-sm font-bold">
+					{name[0]}
+				</span>
+			)}
+			<img
+				key={iconUrl}
+				src={iconUrl}
+				alt=""
+				width={32}
+				height={32}
+				className={[
+					'w-full h-full rounded-lg object-contain',
+					'transition-opacity duration-150',
+					imgOk ? 'opacity-100' : 'opacity-0',
+				].join(' ')}
+				onLoad={() => setImgOk(true)}
+				onError={() => setImgOk(false)}
+				loading="eager"
+				decoding="async"
+			/>
+		</div>
 	)
 }
 
@@ -159,7 +173,10 @@ interface EngineCardProps {
 }
 
 function EngineCard({ engine, query, rank }: EngineCardProps) {
-	const searchUrl = engine.searchUrl.replace('{q}', encodeURIComponent(query.trim()))
+	const searchUrl = engine.searchUrl.replace(
+		'{q}',
+		encodeURIComponent(query.trim()),
+	)
 
 	return (
 		<a
@@ -179,9 +196,9 @@ function EngineCard({ engine, query, rank }: EngineCardProps) {
 				<EngineIcon engine={engine} />
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-1.5 min-w-0">
-						<h3 className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-100 leading-snug">
+						<span className="truncate text-sm font-medium text-foreground group-hover:text-primary transition-colors duration-100 leading-snug">
 							{engine.name}
-						</h3>
+						</span>
 						<span className="shrink-0 text-muted-foreground opacity-0 group-hover:opacity-50 transition-opacity duration-100">
 							<ExternalIcon />
 						</span>
@@ -200,7 +217,11 @@ function EngineCard({ engine, query, rank }: EngineCardProps) {
 			<div className="mt-auto flex items-center justify-between pt-0.5">
 				<span
 					className="inline-flex items-center gap-1 rounded-full text-[11px] font-medium leading-none px-2 py-1"
-					style={{ backgroundColor: 'color-mix(in srgb, var(--color-primary) 10%, transparent)', color: 'var(--color-primary)' }}
+					style={{
+						backgroundColor:
+							'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+						color: 'var(--color-primary)',
+					}}
 				>
 					<svg
 						width="9"
@@ -221,7 +242,6 @@ function EngineCard({ engine, query, rank }: EngineCardProps) {
 				{rank !== undefined && (
 					<span
 						className="inline-flex items-center justify-center h-4 min-w-4 px-1 rounded text-[10px] font-semibold tabular-nums leading-none bg-muted text-muted-foreground border border-border select-none"
-						aria-label={`快捷键 Ctrl+${rank}`}
 						title={`Ctrl+${rank} 打开`}
 					>
 						{rank}
@@ -240,19 +260,13 @@ interface EngineSectionDividerProps {
 
 function EngineSectionDivider({ settingsSlot }: EngineSectionDividerProps) {
 	return (
-		<div
-			className="col-span-full flex items-center gap-3 py-1"
-		>
+		<div className="col-span-full flex items-center gap-3 py-1">
 			<div className="flex-1 h-px bg-border" />
 			<span className="text-[11px] text-muted-foreground font-medium shrink-0 select-none">
 				在网络中搜索
 			</span>
 			<div className="flex-1 h-px bg-border" />
-			{settingsSlot && (
-				<div className="shrink-0">
-					{settingsSlot}
-				</div>
-			)}
+			{settingsSlot && <div className="shrink-0">{settingsSlot}</div>}
 		</div>
 	)
 }
@@ -342,9 +356,7 @@ export function NavGrid({
 			{engineCards.length > 0 && (
 				<>
 					{/* 无站点结果时显示空状态提示 + 引擎区分隔 */}
-					{sites.length === 0 && (
-						<EmptyState hasFilter={hasFilter} />
-					)}
+					{sites.length === 0 && <EmptyState hasFilter={hasFilter} />}
 					<EngineSectionDivider settingsSlot={engineSettings} />
 					{engineCards.map((engine, i) => {
 						// rank 紧接站点编号之后，总数不超过 9

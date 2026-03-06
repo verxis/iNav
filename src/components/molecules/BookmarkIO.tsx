@@ -102,43 +102,73 @@ function CheckIcon() {
 	)
 }
 
-/* ---- Toast 简易通知 ---- */
-
-interface ToastState {
-	message: string
-	type: 'success' | 'error'
+function EyeOffIcon() {
+	return (
+		<svg
+			width="13"
+			height="13"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+			<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+			<line x1="1" y1="1" x2="23" y2="23" />
+		</svg>
+	)
 }
 
 /* ---- 主组件 ---- */
 
 interface BookmarkIOProps {
-	builtinSites: Site[]
+	/** 当前所有可见站点（内置未隐藏 + 自定义 + 导入），用于导出 */
+	visibleSites: Site[]
 	importedCount: number
-	bookmarks: Pick<
-		UseBookmarksReturn,
-		'importFromHtml' | 'clearImported' | 'exportToJson' | 'exportToHtml'
-	>
+	bookmarks: {
+		/** 为 undefined 时隐藏导入入口（feature flag 控制） */
+		importFromHtml?: UseBookmarksReturn['importFromHtml']
+		clearImported: UseBookmarksReturn['clearImported']
+		/** 为 undefined 时隐藏导出入口 */
+		exportToJson?: UseBookmarksReturn['exportToJson']
+		/** 为 undefined 时隐藏导出入口 */
+		exportToHtml?: UseBookmarksReturn['exportToHtml']
+	}
+	/** 已本地隐藏的内置站点数量 */
+	hiddenBuiltinCount?: number
+	/** 恢复所有本地隐藏的内置站点（为 undefined 则不显示按钮） */
+	onRestoreBuiltin?: () => void
+	/** 外部 toast 回调（由 Home 统一管理） */
+	onShowToast?: (message: string, type: 'success' | 'error' | 'info') => void
 }
 
 export function BookmarkIO({
-	builtinSites,
+	visibleSites,
 	importedCount,
 	bookmarks,
+	hiddenBuiltinCount = 0,
+	onRestoreBuiltin,
+	onShowToast,
 }: BookmarkIOProps) {
 	const fileInputRef = useRef<HTMLInputElement>(null)
-	const [toast, setToast] = useState<ToastState | null>(null)
 	const [importing, setImporting] = useState(false)
 	const [showExportMenu, setShowExportMenu] = useState(false)
 	const [showClearConfirm, setShowClearConfirm] = useState(false)
+	const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
 
-	function showToast(message: string, type: ToastState['type']) {
-		setToast({ message, type })
-		setTimeout(() => setToast(null), 3000)
+	function showToast(
+		message: string,
+		type: 'success' | 'error' | 'info' = 'success',
+	) {
+		onShowToast?.(message, type)
 	}
 
 	function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
 		const file = e.target.files?.[0]
-		if (!file) return
+		if (!file || !bookmarks.importFromHtml) return
 
 		setImporting(true)
 		const reader = new FileReader()
@@ -146,7 +176,8 @@ export function BookmarkIO({
 		reader.onload = (evt) => {
 			const html = evt.target?.result as string
 			try {
-				const result = bookmarks.importFromHtml(html)
+				// biome-ignore  lint/style/noNonNullAssertion: none
+				const result = bookmarks.importFromHtml!(html)
 				if (result.imported === 0) {
 					showToast(
 						result.skipped > 0
@@ -164,7 +195,6 @@ export function BookmarkIO({
 				showToast('文件解析失败，请确认是有效的书签 HTML 文件', 'error')
 			} finally {
 				setImporting(false)
-				// 重置 input，允许重复选择同一文件
 				if (fileInputRef.current) fileInputRef.current.value = ''
 			}
 		}
@@ -177,86 +207,119 @@ export function BookmarkIO({
 		reader.readAsText(file, 'utf-8')
 	}
 
+	const hasExport = Boolean(bookmarks.exportToJson || bookmarks.exportToHtml)
+	const hasImport = Boolean(bookmarks.importFromHtml)
+
 	return (
 		<div className="relative flex items-center gap-1">
 			{/* 隐藏的文件输入 */}
-			<input
-				ref={fileInputRef}
-				type="file"
-				accept=".html,.htm"
-				className="sr-only"
-				aria-label="选择书签 HTML 文件"
-				onChange={handleFileChange}
-			/>
+			{hasImport && (
+				<input
+					ref={fileInputRef}
+					type="file"
+					accept=".html,.htm"
+					className="sr-only"
+					aria-label="选择书签 HTML 文件"
+					onChange={handleFileChange}
+				/>
+			)}
 
 			{/* 导入按钮 */}
-			<Button
-				variant="ghost"
-				size="sm"
-				onClick={() => fileInputRef.current?.click()}
-				loading={importing}
-				aria-label="导入浏览器书签"
-				title="导入浏览器书签（HTML 格式）"
-				className="gap-1.5 text-muted-foreground hover:text-foreground"
-			>
-				<UploadIcon />
-				<span className="hidden sm:inline">导入书签</span>
-			</Button>
-
-			{/* 导出按钮 */}
-			<div className="relative">
+			{hasImport && (
 				<Button
 					variant="ghost"
 					size="sm"
-					onClick={() => setShowExportMenu((v) => !v)}
-					aria-label="导出站点数据"
-					title="导出站点数据"
+					onClick={() => fileInputRef.current?.click()}
+					loading={importing}
+					aria-label="导入浏览器书签"
+					title="导入浏览器书签（HTML 格式）"
 					className="gap-1.5 text-muted-foreground hover:text-foreground"
 				>
-					<DownloadIcon />
-					<span className="hidden sm:inline">导出</span>
+					<UploadIcon />
+					<span className="hidden sm:inline">导入书签</span>
 				</Button>
+			)}
 
-				{showExportMenu && (
-					<>
-						{/* 点击外层关闭 */}
-						<div
-							className="fixed inset-0 z-40"
-							onClick={() => setShowExportMenu(false)}
-							aria-hidden="true"
-						/>
-						<div
-							className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 z-50 w-44 bg-surface border border-border rounded-lg overflow-hidden animate-in"
-							role="menu"
-						>
-							<button
-								type="button"
-								role="menuitem"
-								className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors duration-100 text-left"
-								onClick={() => {
-									bookmarks.exportToJson(builtinSites)
-									setShowExportMenu(false)
-								}}
+			{/* 导出按钮 */}
+			{hasExport && (
+				<div className="relative">
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setShowExportMenu((v) => !v)}
+						aria-label="导出站点数据"
+						title="导出站点数据"
+						className="gap-1.5 text-muted-foreground hover:text-foreground"
+					>
+						<DownloadIcon />
+						<span className="hidden sm:inline">导出</span>
+					</Button>
+
+					{showExportMenu && (
+						<>
+							{/* 点击外层关闭 */}
+							<div
+								className="fixed inset-0 z-40"
+								onClick={() => setShowExportMenu(false)}
+								aria-hidden="true"
+							/>
+							<div
+								className="absolute left-0 sm:left-auto sm:right-0 top-full mt-1 z-50 w-52 bg-surface border border-border rounded-lg overflow-hidden shadow-md animate-in"
+								role="menu"
 							>
-								<DownloadIcon />
-								导出为 JSON
-							</button>
-							<button
-								type="button"
-								role="menuitem"
-								className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors duration-100 text-left"
-								onClick={() => {
-									bookmarks.exportToHtml(builtinSites)
-									setShowExportMenu(false)
-								}}
-							>
-								<DownloadIcon />
-								导出为书签 HTML
-							</button>
-						</div>
-					</>
-				)}
-			</div>
+								{/* 导出范围说明 */}
+								<div className="px-3 py-2 border-b border-border">
+									<p className="text-[11px] text-muted-foreground leading-snug">
+										导出全部可见站点
+										<span className="ml-1 tabular-nums text-foreground font-medium">
+											({visibleSites.length})
+										</span>
+									</p>
+								</div>
+
+								{bookmarks.exportToJson && (
+									<button
+										type="button"
+										role="menuitem"
+										className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors duration-100 text-left"
+										onClick={() => {
+											// biome-ignore  lint/style/noNonNullAssertion: none
+											bookmarks.exportToJson!(visibleSites)
+											setShowExportMenu(false)
+											showToast(
+												`已导出 ${visibleSites.length} 个站点（JSON）`,
+												'success',
+											)
+										}}
+									>
+										<DownloadIcon />
+										导出为 JSON
+									</button>
+								)}
+								{bookmarks.exportToHtml && (
+									<button
+										type="button"
+										role="menuitem"
+										className="w-full flex items-center gap-2 px-3 py-2 text-xs text-foreground hover:bg-muted transition-colors duration-100 text-left"
+										onClick={() => {
+											// biome-ignore  lint/style/noNonNullAssertion: none
+											bookmarks.exportToHtml!(visibleSites)
+											setShowExportMenu(false)
+											showToast(
+												`已导出 ${visibleSites.length} 个站点（书签 HTML）`,
+												'success',
+											)
+										}}
+									>
+										<DownloadIcon />
+										导出为书签 HTML
+									</button>
+								)}
+							</div>
+						</>
+					)}
+				</div>
+			)}
 
 			{/* 清除导入（只有存在导入书签时显示） */}
 			{importedCount > 0 && (
@@ -305,24 +368,54 @@ export function BookmarkIO({
 				</>
 			)}
 
-			{/* Toast 通知 */}
-			{toast && (
-				<output
-					aria-live="polite"
-					className={[
-						'fixed bottom-4 left-1/2 -translate-x-1/2 z-50',
-						'flex items-center gap-2',
-						'px-4 py-2.5 rounded-lg',
-						'text-xs font-medium',
-						'shadow-lg animate-in',
-						toast.type === 'success'
-							? 'bg-foreground text-background'
-							: 'bg-error text-white',
-					].join(' ')}
-				>
-					{toast.type === 'success' ? <CheckIcon /> : <CloseIcon />}
-					{toast.message}
-				</output>
+			{/* 恢复隐藏内置站点（只有存在隐藏站点时显示） */}
+			{onRestoreBuiltin && hiddenBuiltinCount > 0 && (
+				<>
+					{showRestoreConfirm ? (
+						<div className="flex items-center gap-1 border border-border rounded-lg px-2 py-1 bg-surface animate-in">
+							<span className="text-xs text-muted-foreground whitespace-nowrap">
+								恢复 {hiddenBuiltinCount} 个隐藏？
+							</span>
+							<button
+								type="button"
+								onClick={() => {
+									onRestoreBuiltin()
+									setShowRestoreConfirm(false)
+									showToast(
+										`已恢复 ${hiddenBuiltinCount} 个内置站点`,
+										'success',
+									)
+								}}
+								className="text-primary hover:opacity-80 transition-opacity"
+								aria-label="确认恢复"
+							>
+								<CheckIcon />
+							</button>
+							<button
+								type="button"
+								onClick={() => setShowRestoreConfirm(false)}
+								className="text-muted-foreground hover:text-foreground transition-colors"
+								aria-label="取消"
+							>
+								<CloseIcon />
+							</button>
+						</div>
+					) : (
+						<Button
+							variant="ghost"
+							size="sm"
+							onClick={() => setShowRestoreConfirm(true)}
+							aria-label={`恢复 ${hiddenBuiltinCount} 个本地隐藏的内置站点`}
+							title={`恢复隐藏的内置站点（${hiddenBuiltinCount} 个）`}
+							className="gap-1.5 text-muted-foreground hover:text-primary"
+						>
+							<EyeOffIcon />
+							<span className="hidden sm:inline tabular-nums">
+								{hiddenBuiltinCount}
+							</span>
+						</Button>
+					)}
+				</>
 			)}
 		</div>
 	)

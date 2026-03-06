@@ -57,31 +57,31 @@ export interface SearchEngineConfig {
 
 export const DEFAULT_SEARCH_ENGINES: SearchEngineConfig[] = [
 	{
-		id: 'google',
-		name: 'Google',
-		searchUrl: 'https://www.google.com/search?q={q}',
-		iconUrl: 'https://www.google.com/s2/favicons?domain=google.com&sz=32',
-		enabled: true,
-	},
-	{
 		id: 'bing',
 		name: 'Bing',
 		searchUrl: 'https://www.bing.com/search?q={q}',
-		iconUrl: 'https://www.google.com/s2/favicons?domain=bing.com&sz=32',
+		iconUrl: 'https://ico.dogxi.me/icon?domain=bing.com',
+		enabled: true,
+	},
+	{
+		id: 'google',
+		name: 'Google',
+		searchUrl: 'https://www.google.com/search?q={q}',
+		iconUrl: 'https://ico.dogxi.me/icon?domain=google.com',
 		enabled: true,
 	},
 	{
 		id: 'duckduckgo',
 		name: 'DuckDuckGo',
 		searchUrl: 'https://duckduckgo.com/?q={q}',
-		iconUrl: 'https://www.google.com/s2/favicons?domain=duckduckgo.com&sz=32',
+		iconUrl: 'https://ico.dogxi.me/icon?domain=duckduckgo.com',
 		enabled: true,
 	},
 	{
 		id: 'github-search',
 		name: 'GitHub',
 		searchUrl: 'https://github.com/search?q={q}',
-		iconUrl: 'https://www.google.com/s2/favicons?domain=github.com&sz=32',
+		iconUrl: 'https://ico.dogxi.me/icon?domain=github.com',
 		enabled: true,
 	},
 ]

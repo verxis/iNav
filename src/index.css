@@ -14,13 +14,13 @@
 	--color-border: #e5e5e7;
 	--color-border-subtle: #f0f0f2;
 
-	--color-primary: #0071e3;
-	--color-primary-hover: #0077ed;
+	--color-primary: #0064d1;
+	--color-primary-hover: #006bdc;
 	--color-primary-foreground: #ffffff;
 	--color-primary-subtle: #e8f0fe;
 
 	--color-muted: #f5f5f7;
-	--color-muted-foreground: #86868b;
+	--color-muted-foreground: #6e6e73;
 	--color-muted-hover: #ebebed;
 
 	--color-accent: #e8f0fe;
@@ -58,8 +58,8 @@
 	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08), 0 4px 6px rgba(0, 0, 0, 0.04);
 	--shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
-	--shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.12),
-		0 2px 8px rgba(0, 0, 0, 0.06);
+	--shadow-popover:
+		0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
 
 	/* ---------- 过渡时长 ---------- */
 	--duration-instant: 50ms;
@@ -96,7 +96,7 @@
 	--color-primary-subtle: #0a2a4a;
 
 	--color-muted: #1c1c1e;
-	--color-muted-foreground: #8e8e93;
+	--color-muted-foreground: #a1a1a6;
 	--color-muted-hover: #252528;
 
 	--color-accent: #0a2a4a;
@@ -116,8 +116,7 @@
 	--shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
 	--shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.2);
 	--shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.2);
-	--shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.5),
-		0 2px 8px rgba(0, 0, 0, 0.3);
+	--shadow-popover: 0 8px 30px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* ============================================================
@@ -147,11 +146,15 @@
 		-moz-osx-font-smoothing: grayscale;
 		background-color: var(--color-background);
 		color: var(--color-foreground);
-		/* 主题切换仅对颜色做过渡 */
+		overflow-x: hidden;
+		/* 主题切换过渡默认关闭，避免首屏 LCP 受到 transition 延迟影响。
+		   页面加载后由 JS 添加 .theme-ready 类来启用过渡。 */
+	}
+
+	body.theme-ready {
 		transition:
 			background-color var(--duration-theme) ease,
 			color var(--duration-theme) ease;
-		overflow-x: hidden;
 	}
 
 	a {
@@ -249,8 +252,6 @@
 		background-color: var(--color-surface-raised);
 	}
 
-
-
 	/* ---------- 输入框 ---------- */
 	.input-base {
 		width: 100%;
@@ -272,11 +273,16 @@
 	.input-base:focus {
 		outline: none;
 		border-color: var(--color-primary);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+		box-shadow: 0 0 0 3px
+			color-mix(in srgb, var(--color-primary) 15%, transparent);
 	}
 
 	.input-base:hover:not(:focus) {
-		border-color: color-mix(in srgb, var(--color-border) 50%, var(--color-primary));
+		border-color: color-mix(
+			in srgb,
+			var(--color-border) 50%,
+			var(--color-primary)
+		);
 	}
 
 	/* ---------- Badge ---------- */
@@ -290,6 +296,14 @@
 		padding: 0.25rem 0.5rem;
 		white-space: nowrap;
 		letter-spacing: 0.01em;
+	}
+
+	/* 桌面端分类标签（CategoryFilter）稍大一点，移动端不变 */
+	@media (min-width: 640px) {
+		.badge-desktop-md {
+			font-size: 0.75rem; /* 12px */
+			padding: 0.3125rem 0.625rem; /* 5px 10px */
+		}
 	}
 
 	.badge-default {
@@ -422,19 +436,23 @@
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 1;
+		line-clamp: 1;
 	}
 
 	.line-clamp-2 {
 		overflow: hidden;
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
+		line-clamp: 2;
 	}
 
 	/* 玻璃拟态 */
 	.glass {
-		background-color: color-mix(in srgb, var(--color-background) 85%, transparent);
+		background-color: color-mix(
+			in srgb,
+			var(--color-background) 85%,
+			transparent
+		);
 		backdrop-filter: blur(12px) saturate(180%);
 		-webkit-backdrop-filter: blur(12px) saturate(180%);
 	}
@@ -605,7 +623,8 @@
 }
 
 .animate-slide-down {
-	animation: slide-down var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: slide-down var(--duration-normal) cubic-bezier(0.16, 1, 0.3, 1)
+		both;
 }
 
 .animate-scale-up {

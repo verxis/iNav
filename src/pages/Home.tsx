@@ -1,4 +1,6 @@
 import {
+	lazy,
+	Suspense,
 	useCallback,
 	useDeferredValue,
 	useEffect,
@@ -10,17 +12,31 @@ import { NavLink } from 'react-router'
 import { BookmarkIO } from '@/components/molecules/BookmarkIO'
 import { CategoryFilter } from '@/components/molecules/CategoryFilter'
 import { EngineSettings } from '@/components/molecules/EngineSettings'
-import { CommandPalette } from '@/components/organisms/CommandPalette'
 import { Header } from '@/components/organisms/Header'
 import { NavGrid } from '@/components/organisms/NavGrid'
-import { SiteFormModal } from '@/components/organisms/SiteFormModal'
+
+// Lazy-load heavy overlay components — they are never needed on initial paint
+const CommandPalette = lazy(() =>
+	import('@/components/organisms/CommandPalette').then((m) => ({
+		default: m.CommandPalette,
+	})),
+)
+const SiteFormModal = lazy(() =>
+	import('@/components/organisms/SiteFormModal').then((m) => ({
+		default: m.SiteFormModal,
+	})),
+)
+
+import {
+	ALLOW_BOOKMARK_EXPORT,
+	ALLOW_BOOKMARK_IMPORT,
+	ALLOW_CUSTOM_SITES,
+	ALLOW_HIDE_BUILTIN,
+} from '@/config/features'
 import sitesData from '@/data/sites.json'
 import { useBookmarks } from '@/hooks/useBookmarks'
 import { useEngineOrder } from '@/hooks/useEngineOrder'
-import {
-	type SitePayload,
-	useSiteManager,
-} from '@/hooks/useSiteManager'
+import { type SitePayload, useSiteManager } from '@/hooks/useSiteManager'
 import type { Site, SiteCategory } from '@/types'
 
 const BUILTIN_SITES = sitesData as Site[]
@@ -34,25 +50,23 @@ function filterSites(
 	query: string,
 	category: SiteCategory | null,
 ): Site[] {
+	let result = sites
+	if (category) {
+		result = result.filter((s) => s.category === category)
+	}
 	const q = query.trim().toLowerCase()
-
-	return sites.filter((site) => {
-		// 分类过滤
-		if (category !== null && site.category !== category) return false
-		// 无关键词时全量显示
-		if (!q) return true
-
-		return (
-			site.name.toLowerCase().includes(q) ||
-			site.description.toLowerCase().includes(q) ||
-			(site.tags?.some((t) => t.toLowerCase().includes(q)) ?? false) ||
-			site.url.toLowerCase().includes(q)
-		)
-	})
+	if (!q) return result
+	return result.filter(
+		(s) =>
+			s.name.toLowerCase().includes(q) ||
+			s.description.toLowerCase().includes(q) ||
+			s.url.toLowerCase().includes(q) ||
+			s.tags?.some((t) => t.toLowerCase().includes(q)),
+	)
 }
 
 /* ============================================================
-   Toast 轻通知（独立于 BookmarkIO，用于站点管理操作）
+   Toast 通知（轻量内部实现）
    ============================================================ */
 interface ToastItem {
 	id: string
@@ -62,21 +76,23 @@ interface ToastItem {
 
 function useToast() {
 	const [toasts, setToasts] = useState<ToastItem[]>([])
-
 	const show = useCallback(
 		(message: string, type: ToastItem['type'] = 'success') => {
 			const id = Math.random().toString(36).slice(2)
 			setToasts((prev) => [...prev, { id, message, type }])
-			setTimeout(() => {
-				setToasts((prev) => prev.filter((t) => t.id !== id))
-			}, 2800)
+			setTimeout(
+				() => setToasts((prev) => prev.filter((t) => t.id !== id)),
+				3000,
+			)
 		},
 		[],
 	)
-
 	return { toasts, show }
 }
 
+/* ============================================================
+   ToastContainer
+   ============================================================ */
 function ToastContainer({ toasts }: { toasts: ToastItem[] }) {
 	if (toasts.length === 0) return null
 	return (
@@ -89,9 +105,8 @@ function ToastContainer({ toasts }: { toasts: ToastItem[] }) {
 				<div
 					key={t.id}
 					className={[
-						'flex items-center gap-2 px-4 py-2.5',
-						'rounded-lg text-xs font-medium',
-						'shadow-lg animate-toast pointer-events-auto',
+						'flex items-center gap-2 px-4 py-2.5 rounded-lg',
+						'text-xs font-medium shadow-lg animate-in',
 						t.type === 'success'
 							? 'bg-foreground text-background'
 							: t.type === 'error'
@@ -99,21 +114,6 @@ function ToastContainer({ toasts }: { toasts: ToastItem[] }) {
 								: 'bg-surface border border-border text-foreground',
 					].join(' ')}
 				>
-					{t.type === 'success' && (
-						<svg
-							width="13"
-							height="13"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2.5"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							aria-hidden="true"
-						>
-							<polyline points="20 6 9 17 4 12" />
-						</svg>
-					)}
 					{t.message}
 				</div>
 			))}
@@ -122,7 +122,7 @@ function ToastContainer({ toasts }: { toasts: ToastItem[] }) {
 }
 
 /* ============================================================
-   删除确认对话框
+   DeleteConfirm 对话框
    ============================================================ */
 interface DeleteConfirmProps {
 	site: Site
@@ -140,6 +140,8 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 		return () => window.removeEventListener('keydown', h)
 	}, [onCancel])
 
+	const isBuiltin = site.source === 'builtin'
+
 	return (
 		<>
 			<div
@@ -155,6 +157,11 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 				className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm animate-scale-up"
 				style={{ zIndex: 300 }}
 				onClick={(e) => e.stopPropagation()}
+				onKeyDown={(e) => {
+					// Mirror the click behavior for keyboard users
+					e.stopPropagation()
+				}}
+				tabIndex={-1}
 			>
 				<div className="popover mx-4 p-5 space-y-4">
 					<div>
@@ -162,17 +169,29 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 							id="del-title"
 							className="text-sm font-semibold text-foreground mb-1"
 						>
-							删除站点
+							{isBuiltin ? '本地隐藏站点' : '删除站点'}
 						</h3>
 						<p
 							id="del-desc"
 							className="text-xs text-muted-foreground leading-relaxed"
 						>
-							确定要删除{' '}
-							<strong className="text-foreground font-medium">
-								{site.name}
-							</strong>{' '}
-							吗？此操作不可撤销。
+							{isBuiltin ? (
+								<>
+									确定要在本地隐藏{' '}
+									<strong className="text-foreground font-medium">
+										{site.name}
+									</strong>{' '}
+									吗？该站点将不再显示，可在设置中恢复。
+								</>
+							) : (
+								<>
+									确定要删除{' '}
+									<strong className="text-foreground font-medium">
+										{site.name}
+									</strong>{' '}
+									吗？此操作不可撤销。
+								</>
+							)}
 						</p>
 					</div>
 					<div className="flex items-center justify-end gap-2">
@@ -190,7 +209,7 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 						</button>
 						<button
 							type="button"
-							// biome-ignore lint/a11y/useAutofocus: 删除确认按钮需要立即获焦
+							// biome-ignore lint/a11y/noAutofocus: 删除确认按钮需要立即获焦
 							autoFocus
 							onClick={onConfirm}
 							className="
@@ -201,7 +220,7 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 								focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error
 							"
 						>
-							确认删除
+							{isBuiltin ? '确认隐藏' : '确认删除'}
 						</button>
 					</div>
 				</div>
@@ -216,7 +235,9 @@ function DeleteConfirm({ site, onConfirm, onCancel }: DeleteConfirmProps) {
 export default function Home() {
 	// ---- 搜索 & 分类状态 ----
 	const [query, setQuery] = useState('')
-	const [activeCategory, setActiveCategory] = useState<SiteCategory | null>(null)
+	const [activeCategory, setActiveCategory] = useState<SiteCategory | null>(
+		null,
+	)
 	const deferredQuery = useDeferredValue(query)
 	const searchInputRef = useRef<HTMLInputElement>(null)
 
@@ -226,7 +247,7 @@ export default function Home() {
 	// ---- 命令面板 ----
 	const [cmdOpen, setCmdOpen] = useState(false)
 
-	// ---- 站点管理（自定义站点） ----
+	// ---- 站点管理（自定义站点 + 内置隐藏） ----
 	const {
 		customSites,
 		addSite,
@@ -234,12 +255,16 @@ export default function Home() {
 		removeSite,
 		togglePin,
 		isUrlDuplicate,
+		hiddenBuiltinIds,
+		hideBuiltin,
+		restoreAllBuiltin,
 	} = useSiteManager()
 
 	// ---- 书签导入/导出 ----
 	const {
 		importedSites,
 		importFromHtml,
+		removeImported,
 		clearImported,
 		exportToJson,
 		exportToHtml,
@@ -255,7 +280,7 @@ export default function Home() {
 	// ---- 删除确认 ----
 	const [deletingSite, setDeletingSite] = useState<Site | undefined>(undefined)
 
-	// ---- 合并三类站点：内置 > 自定义 > 导入 ----
+	// ---- 合并三类站点：内置（过滤隐藏）> 自定义 > 导入 ----
 	const allSites = useMemo<Site[]>(() => {
 		const builtinIds = new Set(BUILTIN_SITES.map((s) => s.id))
 		const customIds = new Set(customSites.map((s) => s.id))
@@ -266,11 +291,20 @@ export default function Home() {
 		)
 
 		return [
-			...BUILTIN_SITES.map((s) => ({ ...s, source: 'builtin' as const })),
+			// 内置站点：过滤掉本地隐藏的
+			...BUILTIN_SITES.filter((s) => !hiddenBuiltinIds.has(s.id)).map((s) => ({
+				...s,
+				source: 'builtin' as const,
+			})),
 			...customSites,
 			...dedupedImported,
 		]
-	}, [customSites, importedSites])
+	}, [customSites, importedSites, hiddenBuiltinIds])
+
+	// ---- 「所有可见站点」用于导出（内置未隐藏 + 自定义 + 导入） ----
+	const visibleSitesForExport = useMemo<Site[]>(() => {
+		return allSites // allSites 已经过滤了隐藏的内置站点
+	}, [allSites])
 
 	// ---- 分类列表 ----
 	const categories = useMemo<SiteCategory[]>(() => {
@@ -314,7 +348,9 @@ export default function Home() {
 	 *   2. 已启用的搜索引擎卡片（rank 紧接站点之后）
 	 * 只有在有搜索词时才追加引擎卡片。
 	 */
-	const buildOpenableList = (q: string): Array<{ url: string; label: string }> => {
+	const buildOpenableList = (
+		q: string,
+	): Array<{ url: string; label: string }> => {
 		const sites = filteredSitesRef.current
 		const trimmed = q.trim()
 
@@ -336,6 +372,7 @@ export default function Home() {
 	}
 
 	// 任意可打印字符聚焦搜索框 + Enter 打开第一结果 + Ctrl/⌘+1-9 快速打开
+	// biome-ignore lint/correctness/useExhaustiveDependencies: none
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			// ⌘K / Ctrl+K 打开命令面板
@@ -410,26 +447,40 @@ export default function Home() {
 		setFormOpen(true)
 	}, [])
 
-	// ---- 删除回调 ----
+	// ---- 删除回调（统一入口：自定义/导入 → 真删除，内置 → 本地隐藏） ----
 	const handleDelete = useCallback((site: Site) => {
 		setDeletingSite(site)
 	}, [])
 
 	const confirmDelete = useCallback(() => {
 		if (!deletingSite) return
-		removeSite(deletingSite.id)
-		showToast(`「${deletingSite.name}」已删除`, 'success')
-		setDeletingSite(undefined)
-	}, [deletingSite, removeSite, showToast])
 
-	// ---- 置顶回调 ----
+		if (deletingSite.source === 'builtin') {
+			// 内置站点：本地隐藏
+			hideBuiltin(deletingSite.id)
+			showToast(`「${deletingSite.name}」已在本地隐藏`, 'success')
+		} else if (deletingSite.source === 'imported') {
+			// 导入站点：从导入列表中删除
+			removeImported(deletingSite.id)
+			showToast(`「${deletingSite.name}」已删除`, 'success')
+		} else {
+			// 自定义站点：真删除
+			removeSite(deletingSite.id)
+			showToast(`「${deletingSite.name}」已删除`, 'success')
+		}
+
+		setDeletingSite(undefined)
+	}, [deletingSite, hideBuiltin, removeImported, removeSite, showToast])
+
+	// ---- 置顶回调（仅 custom 站点支持，builtin 不支持 pin） ----
 	const handleTogglePin = useCallback(
 		(site: Site) => {
-			// 只有自定义和导入的站点支持置顶操作
-			if (site.source === 'custom') {
-				togglePin(site.id)
-				showToast(site.pinned ? '已取消置顶' : `「${site.name}」已置顶`, 'success')
-			}
+			if (site.source !== 'custom') return
+			togglePin(site.id)
+			showToast(
+				site.pinned ? '已取消置顶' : `「${site.name}」已置顶`,
+				'success',
+			)
 		},
 		[togglePin, showToast],
 	)
@@ -438,27 +489,33 @@ export default function Home() {
 		<div className="min-h-screen flex flex-col bg-background">
 			{/* ---- Header ---- */}
 			<Header
-					searchValue={query}
-					onSearchChange={handleSearchChange}
-					searchInputRef={searchInputRef}
-					siteCount={allSites.length}
-					onOpenCommandPalette={() => setCmdOpen(true)}
-					onAddSite={() => {
-						setEditingSite(undefined)
-						setFormOpen(true)
-					}}
-					onReset={() => {
-						setQuery('')
-						setActiveCategory(null)
-						requestAnimationFrame(() => searchInputRef.current?.blur())
-					}}
-				/>
+				searchValue={query}
+				onSearchChange={handleSearchChange}
+				searchInputRef={searchInputRef}
+				siteCount={allSites.length}
+				onOpenCommandPalette={() => setCmdOpen(true)}
+				onAddSite={
+					ALLOW_CUSTOM_SITES
+						? () => {
+								setEditingSite(undefined)
+								setFormOpen(true)
+							}
+						: undefined
+				}
+				onReset={() => {
+					setQuery('')
+					setActiveCategory(null)
+					requestAnimationFrame(() => searchInputRef.current?.blur())
+				}}
+			/>
 
 			{/* ---- 主内容 ---- */}
 			<main
 				aria-label="导航站主页"
 				className="flex-1 page-enter mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 space-y-3"
 			>
+				{/* 视觉隐藏的页面级标题，供屏幕阅读器识别（标题层级从 h1 开始） */}
+				<h1 className="sr-only">iNav — 个人导航站</h1>
 				{/* 工具栏：分类筛选 + 书签导入导出 */}
 				<div className="flex flex-col sm:flex-row sm:items-center gap-2">
 					<div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
@@ -468,18 +525,34 @@ export default function Home() {
 							onChange={handleCategoryChange}
 						/>
 					</div>
-					<div className="shrink-0 flex items-center">
-						<BookmarkIO
-							builtinSites={BUILTIN_SITES}
-							importedCount={importedSites.length}
-							bookmarks={{
-								importFromHtml,
-								clearImported,
-								exportToJson,
-								exportToHtml,
-							}}
-						/>
-					</div>
+					{/* 仅当导入或导出功能至少一项开启时才渲染 BookmarkIO */}
+					{(ALLOW_BOOKMARK_IMPORT || ALLOW_BOOKMARK_EXPORT) && (
+						<div className="shrink-0 flex items-center">
+							<BookmarkIO
+								visibleSites={visibleSitesForExport}
+								importedCount={importedSites.length}
+								bookmarks={{
+									importFromHtml: ALLOW_BOOKMARK_IMPORT
+										? importFromHtml
+										: undefined,
+									clearImported,
+									exportToJson: ALLOW_BOOKMARK_EXPORT
+										? exportToJson
+										: undefined,
+									exportToHtml: ALLOW_BOOKMARK_EXPORT
+										? exportToHtml
+										: undefined,
+								}}
+								hiddenBuiltinCount={hiddenBuiltinIds.size}
+								onRestoreBuiltin={
+									ALLOW_HIDE_BUILTIN && hiddenBuiltinIds.size > 0
+										? restoreAllBuiltin
+										: undefined
+								}
+								onShowToast={showToast}
+							/>
+						</div>
+					)}
 				</div>
 
 				{/* 搜索结果信息 */}
@@ -550,6 +623,11 @@ export default function Home() {
 								（{importedSites.length} 导入）
 							</span>
 						)}
+						{hiddenBuiltinIds.size > 0 && (
+							<span className="ml-1 text-muted-foreground/60">
+								（{hiddenBuiltinIds.size} 已隐藏）
+							</span>
+						)}
 						{' · '}
 						{categories.length} 个分类
 					</span>
@@ -585,24 +663,36 @@ export default function Home() {
 				</div>
 			</footer>
 
-			{/* ---- 命令面板 ---- */}
-			<CommandPalette
-				open={cmdOpen}
-				onClose={() => setCmdOpen(false)}
-				sites={allSites}
-			/>
+			{/* ---- 命令面板（懒加载，仅在打开时挂载） ---- */}
+			<Suspense fallback={null}>
+				<CommandPalette
+					open={cmdOpen}
+					onClose={() => setCmdOpen(false)}
+					sites={allSites}
+				/>
+			</Suspense>
 
-			{/* ---- 添加 / 编辑站点表单 ---- */}
-			<SiteFormModal
-				open={formOpen}
-				editSite={editingSite}
-				onClose={() => {
-					setFormOpen(false)
-					setEditingSite(undefined)
-				}}
-				onSubmit={handleFormSubmit}
-				isUrlDuplicate={isUrlDuplicate}
-			/>
+			{/* ---- 添加 / 编辑站点表单（懒加载，仅在 ALLOW_CUSTOM_SITES 时挂载） ---- */}
+			{ALLOW_CUSTOM_SITES && (
+				<Suspense fallback={null}>
+					<SiteFormModal
+						open={formOpen}
+						editSite={editingSite}
+						onClose={() => {
+							setFormOpen(false)
+							setEditingSite(undefined)
+						}}
+						onSubmit={handleFormSubmit}
+						isUrlDuplicate={isUrlDuplicate}
+						onDelete={
+							editingSite?.source === 'custom' ||
+							editingSite?.source === 'imported'
+								? handleDelete
+								: undefined
+						}
+					/>
+				</Suspense>
+			)}
 
 			{/* ---- 删除确认对话框 ---- */}
 			{deletingSite && (

@@ -160,10 +160,10 @@ const FEATURES: Feature[] = [
    ============================================================ */
 
 const METRICS = [
-	{ value: '< 1s', label: 'FCP', desc: '首次内容绘制' },
-	{ value: '0ms', label: 'FOUC', desc: '主题切换闪烁' },
+	{ value: '100', label: 'Accessibility', desc: 'Lighthouse 满分' },
+	{ value: '0ms', label: 'FOUC', desc: '主题切换无闪烁' },
+	{ value: '21KB', label: '主 Chunk', desc: 'Gzip，懒加载后' },
 	{ value: '100%', label: 'TypeScript', desc: 'strict 覆盖率' },
-	{ value: '< 50KB', label: 'JS Bundle', desc: 'Gzip 后估算' },
 ]
 
 /* ============================================================
@@ -285,7 +285,6 @@ export default function About() {
 	return (
 		<div className="min-h-screen flex flex-col bg-background">
 			<AboutHeader />
-
 			<main
 				aria-label="关于 iNav"
 				className="flex-1 page-enter mx-auto w-full max-w-4xl px-4 sm:px-6 py-10 space-y-12"
@@ -301,8 +300,8 @@ export default function About() {
 								关于 iNav
 							</h1>
 							<p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
-								基于 React 19 + TypeScript 的个人导航站，采用原子设计模式构建组件库，
-								专注于{' '}
+								基于 React 19 + TypeScript
+								的个人导航站，采用原子设计模式构建组件库，专注于{' '}
 								<strong className="text-foreground font-medium">
 									极致的使用体验
 								</strong>
@@ -590,8 +589,7 @@ bun run build`}</code>
 					</div>
 				</section>
 			</main>
-
-			{/* ---- Footer ---- */}
+			;
 			<footer className="border-t border-border">
 				<div className="mx-auto max-w-4xl px-4 sm:px-6 h-10 flex items-center justify-between">
 					<span className="text-xs text-muted-foreground tabular-nums">

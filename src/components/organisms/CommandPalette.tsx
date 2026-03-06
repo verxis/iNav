@@ -1,10 +1,4 @@
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
 	CommandIcon,
 	ExternalLinkIcon,
@@ -273,6 +267,7 @@ export function CommandPalette({ open, onClose, sites }: CommandPaletteProps) {
 	}, [open])
 
 	// query 变化时重置选中
+	// biome-ignore  lint/correctness/useExhaustiveDependencies: need
 	useEffect(() => {
 		setSelectedIndex(0)
 	}, [query])
@@ -338,11 +333,16 @@ export function CommandPalette({ open, onClose, sites }: CommandPaletteProps) {
 				className="
 					fixed left-1/2 top-[18%] -translate-x-1/2
 					w-full max-w-xl
-					z-[var(--z-modal)]
+					z-(--z-modal)
 					animate-scale-up
 				"
 				style={{ zIndex: 300 }}
 				onClick={handlePanelClick}
+				onKeyDown={(e) => {
+					// Mirror the click behavior for keyboard users
+					e.stopPropagation()
+				}}
+				tabIndex={-1}
 			>
 				<div className="popover mx-4">
 					{/* 搜索输入行 */}
@@ -391,8 +391,13 @@ export function CommandPalette({ open, onClose, sites }: CommandPaletteProps) {
 						{/* ⌘K 提示 */}
 						{!query && (
 							<div className="shrink-0 flex items-center gap-0.5">
-								<CommandIcon size={11} className="text-muted-foreground opacity-40" />
-								<span className="text-[11px] text-muted-foreground opacity-40">K</span>
+								<CommandIcon
+									size={11}
+									className="text-muted-foreground opacity-40"
+								/>
+								<span className="text-[11px] text-muted-foreground opacity-40">
+									K
+								</span>
 							</div>
 						)}
 					</div>

@@ -1,18 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Site, SiteCategory } from '@/types'
-
-/* ============================================================
-   useSiteManager
-   管理"用户自定义站点"（有别于内置 sites.json 和书签导入）
-   - CRUD：添加、编辑、删除单个站点
-   - 置顶 / 取消置顶
-   - 批量清除
-   - localStorage 持久化（key: inav-custom-sites）
-   ============================================================ */
+import { getFaviconUrl } from '@/utils/favicon'
 
 const STORAGE_KEY = 'inav-custom-sites'
-
-// ---- 持久化工具 ----
+const HIDDEN_BUILTIN_KEY = 'inav-hidden-builtin'
 
 function loadCustomSites(): Site[] {
 	try {
@@ -31,7 +22,22 @@ function saveCustomSites(sites: Site[]): void {
 	} catch {}
 }
 
-// ---- ID 生成 ----
+function loadHiddenBuiltin(): Set<string> {
+	try {
+		const raw = localStorage.getItem(HIDDEN_BUILTIN_KEY)
+		if (!raw) return new Set()
+		const parsed = JSON.parse(raw)
+		return Array.isArray(parsed) ? new Set(parsed as string[]) : new Set()
+	} catch {
+		return new Set()
+	}
+}
+
+function saveHiddenBuiltin(ids: Set<string>): void {
+	try {
+		localStorage.setItem(HIDDEN_BUILTIN_KEY, JSON.stringify(Array.from(ids)))
+	} catch {}
+}
 
 function slugify(text: string): string {
 	return text
@@ -60,17 +66,6 @@ function generateId(name: string, url: string, existingIds: Set<string>): string
 	return id
 }
 
-// ---- 自动生成 iconUrl ----
-
-function autoIconUrl(url: string): string | undefined {
-	const domain = extractDomain(url)
-	if (!domain) return undefined
-	return `https://www.google.com/s2/favicons?domain=${domain}&sz=32`
-}
-
-// ---- 新站点数据结构 ----
-
-/** 添加/编辑站点时的输入 payload（不含 id / source / addedAt） */
 export interface SitePayload {
 	name: string
 	url: string
@@ -80,8 +75,6 @@ export interface SitePayload {
 	pinned?: boolean
 	tags?: string[]
 }
-
-// ---- 验证 ----
 
 export interface ValidationError {
 	field: keyof SitePayload
@@ -123,42 +116,39 @@ export function validateSitePayload(payload: Partial<SitePayload>): ValidationEr
 	return errors
 }
 
-// ---- Hook 返回类型 ----
-
 export interface UseSiteManagerReturn {
-	/** 所有自定义站点 */
 	customSites: Site[]
-	/** 添加一个新站点，自动生成 id / iconUrl / addedAt */
 	addSite: (payload: SitePayload) => Site
-	/** 编辑已有站点（通过 id 查找） */
 	updateSite: (id: string, payload: Partial<SitePayload>) => void
-	/** 删除站点 */
 	removeSite: (id: string) => void
-	/** 切换置顶状态 */
 	togglePin: (id: string) => void
-	/** 清空所有自定义站点 */
 	clearCustomSites: () => void
-	/** 检查 URL 是否已存在（去重提示） */
 	isUrlDuplicate: (url: string, excludeId?: string) => boolean
+	hiddenBuiltinIds: Set<string>
+	hideBuiltin: (id: string) => void
+	restoreBuiltin: (id: string) => void
+	restoreAllBuiltin: () => void
+	/** addSite 每次成功后递增，供外部依赖触发重新计算 */
+	siteRevision: number
 }
-
-// ---- Hook 实现 ----
 
 export function useSiteManager(): UseSiteManagerReturn {
 	const [customSites, setCustomSites] = useState<Site[]>(() => loadCustomSites())
+	const [hiddenBuiltinIds, setHiddenBuiltinIds] = useState<Set<string>>(() => loadHiddenBuiltin())
+	const [siteRevision, setSiteRevision] = useState(0)
 
-	// 持久化到 localStorage
 	useEffect(() => {
 		saveCustomSites(customSites)
 	}, [customSites])
 
+	useEffect(() => {
+		saveHiddenBuiltin(hiddenBuiltinIds)
+	}, [hiddenBuiltinIds])
+
 	const addSite = useCallback(
 		(payload: SitePayload): Site => {
 			const existingIds = new Set(customSites.map((s) => s.id))
-
-			// 自动补充 iconUrl（如用户未提供）
-			const iconUrl =
-				payload.iconUrl?.trim() || autoIconUrl(payload.url) || undefined
+			const iconUrl = payload.iconUrl?.trim() || getFaviconUrl(payload.url) || undefined
 
 			const site: Site = {
 				id: generateId(payload.name, payload.url, existingIds),
@@ -174,6 +164,7 @@ export function useSiteManager(): UseSiteManagerReturn {
 			}
 
 			setCustomSites((prev) => [site, ...prev])
+			setSiteRevision((v) => v + 1)
 			return site
 		},
 		[customSites],
@@ -184,16 +175,13 @@ export function useSiteManager(): UseSiteManagerReturn {
 			setCustomSites((prev) =>
 				prev.map((site) => {
 					if (site.id !== id) return site
-
-					// 如果 url 变了且没有手动提供 iconUrl，重新生成
 					const newUrl = payload.url?.trim() ?? site.url
 					const iconUrl =
 						payload.iconUrl !== undefined
 							? payload.iconUrl?.trim() || undefined
 							: newUrl !== site.url
-								? autoIconUrl(newUrl) || site.iconUrl
+								? getFaviconUrl(newUrl) || site.iconUrl
 								: site.iconUrl
-
 					return {
 						...site,
 						...payload,
@@ -233,6 +221,26 @@ export function useSiteManager(): UseSiteManagerReturn {
 		[customSites],
 	)
 
+	const hideBuiltin = useCallback((id: string) => {
+		setHiddenBuiltinIds((prev) => {
+			const next = new Set(prev)
+			next.add(id)
+			return next
+		})
+	}, [])
+
+	const restoreBuiltin = useCallback((id: string) => {
+		setHiddenBuiltinIds((prev) => {
+			const next = new Set(prev)
+			next.delete(id)
+			return next
+		})
+	}, [])
+
+	const restoreAllBuiltin = useCallback(() => {
+		setHiddenBuiltinIds(new Set())
+	}, [])
+
 	return {
 		customSites,
 		addSite,
@@ -241,5 +249,10 @@ export function useSiteManager(): UseSiteManagerReturn {
 		togglePin,
 		clearCustomSites,
 		isUrlDuplicate,
+		hiddenBuiltinIds,
+		hideBuiltin,
+		restoreBuiltin,
+		restoreAllBuiltin,
+		siteRevision,
 	}
 }

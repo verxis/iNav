@@ -19,7 +19,7 @@ export function CategoryFilter({
 			<Badge
 				variant={activeCategory === null ? 'active' : 'default'}
 				onClick={() => handleSelect(null)}
-				className="shrink-0 whitespace-nowrap"
+				className="shrink-0 whitespace-nowrap badge-desktop-md"
 				aria-pressed={activeCategory === null}
 			>
 				全部
@@ -32,7 +32,7 @@ export function CategoryFilter({
 						key={category}
 						variant={isActive ? 'active' : 'primary'}
 						onClick={() => handleSelect(category)}
-						className="shrink-0 whitespace-nowrap"
+						className="shrink-0 whitespace-nowrap badge-desktop-md"
 						aria-pressed={isActive}
 					>
 						{category}

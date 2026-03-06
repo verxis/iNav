@@ -9,9 +9,7 @@ import { router } from './route'
 const rootElement = document.getElementById('root')
 
 if (!rootElement) {
-	throw new Error(
-		'[iNav] 挂载失败：未找到 #root 元素，请检查 index.html 是否包含 <div id="root">',
-	)
+	throw new Error('[iNav] 挂载失败：未找到 #root 元素')
 }
 
 createRoot(rootElement).render(
@@ -19,3 +17,16 @@ createRoot(rootElement).render(
 		<RouterProvider router={router} />
 	</StrictMode>,
 )
+
+requestAnimationFrame(() => {
+	requestAnimationFrame(() => {
+		// 首帧后启用主题过渡，避免初始渲染触发颜色动画
+		document.body.classList.add('theme-ready')
+
+		// 移除 index.html 骨架屏
+		document.getElementById('shell-header')?.remove()
+		document.getElementById('shell-main')?.remove()
+
+		rootElement.classList.add('app-ready')
+	})
+})

@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/atoms/Button'
-import {
-	CheckIcon,
-	GlobeIcon,
-	XIcon,
-} from '@/components/atoms/Icons'
+import { CheckIcon, GlobeIcon, XIcon } from '@/components/atoms/Icons'
 import {
 	type SitePayload,
-	validateSitePayload,
 	type ValidationError,
+	validateSitePayload,
 } from '@/hooks/useSiteManager'
 import type { Site, SiteCategory } from '@/types'
+import { getFaviconUrl } from '@/utils/favicon'
 
 /* ============================================================
    useFetchMeta
@@ -36,13 +33,21 @@ async function fetchPageMeta(url: string): Promise<PageMeta | null> {
 
 		const doc = new DOMParser().parseFromString(html, 'text/html')
 
-		const title =
-			doc.querySelector('title')?.textContent?.trim() ?? ''
+		const title = doc.querySelector('title')?.textContent?.trim() ?? ''
 
 		const description =
-			doc.querySelector('meta[name="description"]')?.getAttribute('content')?.trim() ||
-			doc.querySelector('meta[property="og:description"]')?.getAttribute('content')?.trim() ||
-			doc.querySelector('meta[name="twitter:description"]')?.getAttribute('content')?.trim() ||
+			doc
+				.querySelector('meta[name="description"]')
+				?.getAttribute('content')
+				?.trim() ||
+			doc
+				.querySelector('meta[property="og:description"]')
+				?.getAttribute('content')
+				?.trim() ||
+			doc
+				.querySelector('meta[name="twitter:description"]')
+				?.getAttribute('content')
+				?.trim() ||
 			''
 
 		if (!title && !description) return null
@@ -91,9 +96,7 @@ function FaviconPreview({ url, name }: { url: string; name: string }) {
 		try {
 			const domain = new URL(url.trim()).hostname
 			if (domain) {
-				setIconUrl(
-					`https://www.google.com/s2/favicons?domain=${domain}&sz=32`,
-				)
+				setIconUrl(getFaviconUrl(domain) ?? '')
 			} else {
 				setIconUrl('')
 			}
@@ -136,13 +139,17 @@ interface FieldProps {
 	hint?: string
 }
 
-function Field({ label, htmlFor, error, required, children, hint }: FieldProps) {
+function Field({
+	label,
+	htmlFor,
+	error,
+	required,
+	children,
+	hint,
+}: FieldProps) {
 	return (
 		<div className="flex flex-col gap-1.5">
-			<label
-				htmlFor={htmlFor}
-				className="text-xs font-medium text-foreground"
-			>
+			<label htmlFor={htmlFor} className="text-xs font-medium text-foreground">
 				{label}
 				{required && (
 					<span className="ml-0.5 text-error" aria-hidden="true">
@@ -157,7 +164,9 @@ function Field({ label, htmlFor, error, required, children, hint }: FieldProps) 
 				</p>
 			)}
 			{hint && !error && (
-				<p className="text-[11px] text-muted-foreground leading-tight">{hint}</p>
+				<p className="text-[11px] text-muted-foreground leading-tight">
+					{hint}
+				</p>
 			)}
 		</div>
 	)
@@ -208,6 +217,11 @@ export interface SiteFormModalProps {
 	onSubmit: (payload: SitePayload, editId?: string) => void
 	/** 检测 URL 是否重复（由父组件提供） */
 	isUrlDuplicate?: (url: string, excludeId?: string) => boolean
+	/**
+	 * 编辑模式下，为 custom / imported 站点提供删除回调。
+	 * 为 undefined 则不显示删除按钮（内置站点不可在此删除）。
+	 */
+	onDelete?: (site: Site) => void
 }
 
 export function SiteFormModal({
@@ -216,6 +230,7 @@ export function SiteFormModal({
 	onClose,
 	onSubmit,
 	isUrlDuplicate,
+	onDelete,
 }: SiteFormModalProps) {
 	const isEdit = Boolean(editSite)
 	const [form, setForm] = useState<SitePayload>(
@@ -227,7 +242,9 @@ export function SiteFormModal({
 	const firstInputRef = useRef<HTMLInputElement>(null)
 
 	// ---- 自动获取元数据状态 ----
-	const [fetchStatus, setFetchStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+	const [fetchStatus, setFetchStatus] = useState<
+		'idle' | 'loading' | 'done' | 'error'
+	>('idle')
 	// 记录已抓取过的 URL，避免重复请求
 	const fetchedUrlRef = useRef<string>('')
 	// 防抖 timer
@@ -267,9 +284,7 @@ export function SiteFormModal({
 			setForm((prev) => ({ ...prev, [key]: value }))
 			// 已提交过则实时重新校验
 			if (submitted) {
-				setErrors(
-					validateSitePayload({ ...form, [key]: value }),
-				)
+				setErrors(validateSitePayload({ ...form, [key]: value }))
 			}
 		},
 		[form, submitted],
@@ -311,8 +326,12 @@ export function SiteFormModal({
 				// 只填入用户尚未输入的字段，不覆盖已有内容
 				setForm((prev) => ({
 					...prev,
-					name: prev.name.trim() ? prev.name : (meta.title.slice(0, 50) || prev.name),
-					description: prev.description.trim() ? prev.description : (meta.description.slice(0, 100) || prev.description),
+					name: prev.name.trim()
+						? prev.name
+						: meta.title.slice(0, 50) || prev.name,
+					description: prev.description.trim()
+						? prev.description
+						: meta.description.slice(0, 100) || prev.description,
 				}))
 			}, 600)
 		},
@@ -344,6 +363,14 @@ export function SiteFormModal({
 		[form.tags, setField],
 	)
 
+	// 删除（编辑模式下 custom/imported 站点）
+	const handleDelete = useCallback(() => {
+		if (!editSite || !onDelete) return
+		onClose()
+		// 延迟一帧，确保 modal 关闭动画不冲突
+		requestAnimationFrame(() => onDelete(editSite))
+	}, [editSite, onDelete, onClose])
+
 	// 提交
 	const handleSubmit = useCallback(
 		(e: React.FormEvent) => {
@@ -370,6 +397,8 @@ export function SiteFormModal({
 		[form, editSite, isUrlDuplicate, onSubmit, onClose],
 	)
 
+	const canDelete = isEdit && Boolean(onDelete) && Boolean(editSite)
+
 	if (!open) return null
 
 	return (
@@ -393,6 +422,11 @@ export function SiteFormModal({
 				"
 				style={{ zIndex: 300 }}
 				onClick={(e) => e.stopPropagation()}
+				onKeyDown={(e) => {
+					// Mirror the click behavior for keyboard users
+					e.stopPropagation()
+				}}
+				tabIndex={-1}
 			>
 				<div className="popover mx-4 max-h-[90vh] flex flex-col">
 					{/* Header */}
@@ -467,7 +501,10 @@ export function SiteFormModal({
 									value={form.url}
 									onChange={(e) => handleUrlChange(e.target.value)}
 									placeholder="https://example.com"
-									className={[inputCls(Boolean(fieldError('url'))), 'pl-8 pr-8'].join(' ')}
+									className={[
+										inputCls(Boolean(fieldError('url'))),
+										'pl-8 pr-8',
+									].join(' ')}
 									autoComplete="url"
 									autoCapitalize="none"
 									spellCheck={false}
@@ -476,10 +513,7 @@ export function SiteFormModal({
 								{!isEdit && fetchStatus !== 'idle' && (
 									<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
 										{fetchStatus === 'loading' && (
-											<span
-												className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin"
-												aria-label="正在获取页面信息"
-											/>
+											<span className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
 										)}
 										{fetchStatus === 'done' && (
 											<svg
@@ -521,7 +555,17 @@ export function SiteFormModal({
 							{/* 抓取成功提示 */}
 							{!isEdit && fetchStatus === 'done' && (
 								<p className="text-[11px] text-success leading-tight flex items-center gap-1">
-									<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+									<svg
+										width="10"
+										height="10"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2.5"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+										aria-hidden="true"
+									>
 										<polyline points="20 6 9 17 4 12" />
 									</svg>
 									已自动填入标题与描述，可手动修改
@@ -560,7 +604,10 @@ export function SiteFormModal({
 							required
 							error={fieldError('category')}
 						>
-							<div className="flex flex-wrap gap-1.5" role="group" aria-label="选择分类">
+							<fieldset
+								className="flex flex-wrap gap-1.5"
+								aria-label="选择分类"
+							>
 								{CATEGORIES.map((cat) => (
 									<button
 										key={cat}
@@ -578,7 +625,7 @@ export function SiteFormModal({
 										{cat}
 									</button>
 								))}
-							</div>
+							</fieldset>
 						</Field>
 
 						{/* 标签（可选） */}
@@ -631,7 +678,9 @@ export function SiteFormModal({
 						{/* 置顶开关 */}
 						<div className="flex items-center justify-between py-1">
 							<div>
-								<p className="text-xs font-medium text-foreground">置顶此站点</p>
+								<p className="text-xs font-medium text-foreground">
+									置顶此站点
+								</p>
 								<p className="text-[11px] text-muted-foreground mt-0.5">
 									置顶站点将始终排在网格首位
 								</p>
@@ -661,23 +710,66 @@ export function SiteFormModal({
 
 					{/* Footer */}
 					<div className="flex items-center justify-between gap-3 px-5 py-3.5 border-t border-border shrink-0">
-						<Button
-							variant="ghost"
-							size="sm"
-							type="button"
-							onClick={onClose}
-						>
-							取消
-						</Button>
-						<Button
-							variant="primary"
-							size="sm"
-							type="submit"
-							onClick={handleSubmit}
-						>
-							<CheckIcon size={14} />
-							{isEdit ? '保存更改' : '添加站点'}
-						</Button>
+						{/* 左侧：删除按钮（仅编辑 custom/imported 时出现） */}
+						{canDelete ? (
+							<button
+								type="button"
+								onClick={handleDelete}
+								className="
+										flex items-center gap-1.5
+										h-8 px-3 text-xs font-medium rounded-lg
+										text-error hover:bg-error/10
+										transition-colors duration-100
+										focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-error
+									"
+								aria-label="删除此站点"
+							>
+								<svg
+									width="13"
+									height="13"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									aria-hidden="true"
+								>
+									<polyline points="3 6 5 6 21 6" />
+									<path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+									<path d="M10 11v6M14 11v6" />
+									<path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+								</svg>
+								删除
+							</button>
+						) : (
+							<Button variant="ghost" size="sm" type="button" onClick={onClose}>
+								取消
+							</Button>
+						)}
+
+						{/* 右侧：取消（删除模式下）+ 保存/添加 */}
+						<div className="flex items-center gap-2">
+							{canDelete && (
+								<Button
+									variant="ghost"
+									size="sm"
+									type="button"
+									onClick={onClose}
+								>
+									取消
+								</Button>
+							)}
+							<Button
+								variant="primary"
+								size="sm"
+								type="submit"
+								onClick={handleSubmit}
+							>
+								<CheckIcon size={14} />
+								{isEdit ? '保存更改' : '添加站点'}
+							</Button>
+						</div>
 					</div>
 				</div>
 			</div>

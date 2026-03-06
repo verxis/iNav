@@ -145,14 +145,18 @@ function InfoPopover({ siteCount }: InfoPopoverProps) {
 					{/* 快捷键说明 */}
 					<div className="px-4 py-2.5 border-b border-border space-y-1.5">
 						<div className="flex items-center justify-between">
-							<span className="text-[11px] text-muted-foreground">命令面板</span>
+							<span className="text-[11px] text-muted-foreground">
+								命令面板
+							</span>
 							<div className="flex items-center gap-0.5">
 								<kbd className="kbd">⌘</kbd>
 								<kbd className="kbd">K</kbd>
 							</div>
 						</div>
 						<div className="flex items-center justify-between">
-							<span className="text-[11px] text-muted-foreground">聚焦搜索</span>
+							<span className="text-[11px] text-muted-foreground">
+								聚焦搜索
+							</span>
 							<span className="text-[11px] text-muted-foreground">任意键</span>
 						</div>
 					</div>
@@ -204,9 +208,9 @@ function Logo() {
 		<div className="flex items-center gap-2 shrink-0">
 			<NavLogoIcon size={26} />
 			<div>
-				<h1 className="text-sm font-bold text-foreground leading-none tracking-tight">
+				<p className="text-sm font-bold text-foreground leading-none tracking-tight">
 					iNav
-				</h1>
+				</p>
 				<p className="text-[10px] text-muted-foreground leading-none mt-0.5 hidden sm:block">
 					快速导航站
 				</p>
@@ -256,7 +260,7 @@ export interface HeaderProps {
 	searchInputRef: React.RefObject<HTMLInputElement | null>
 	siteCount: number
 	onOpenCommandPalette: () => void
-	onAddSite: () => void
+	onAddSite?: () => void
 	/** 点击 Logo 时重置搜索词和分类筛选 */
 	onReset: () => void
 }
@@ -276,14 +280,14 @@ export function Header({
 		<header className="sticky top-0 z-50 glass border-b border-border">
 			<div className="w-full flex items-center gap-2 h-12 px-4 sm:px-6">
 				{/* 左：Logo — 点击重置搜索和分类 */}
-					<NavLink
-						to="/"
-						onClick={onReset}
-						className="text-foreground no-underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-						aria-label="iNav 首页，点击清除搜索"
-					>
-						<Logo />
-					</NavLink>
+				<NavLink
+					to="/"
+					onClick={onReset}
+					className="text-foreground no-underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+					aria-label="iNav 首页，点击清除搜索"
+				>
+					<Logo />
+				</NavLink>
 
 				{/* 中：搜索框（flex-1） */}
 				<div className="flex-1 min-w-0 mx-2">
@@ -301,19 +305,24 @@ export function Header({
 					<CmdKButton onClick={onOpenCommandPalette} />
 
 					{/* 分割线 */}
-					<div className="hidden sm:block h-5 w-px bg-border mx-0.5" aria-hidden="true" />
+					<div
+						className="hidden sm:block h-5 w-px bg-border mx-0.5"
+						aria-hidden="true"
+					/>
 
-					{/* 添加站点 */}
-					<Button
-						variant="primary"
-						size="sm"
-						onClick={onAddSite}
-						aria-label="添加站点"
-						className="gap-1.5"
-					>
-						<PlusIcon size={14} />
-						<span className="hidden sm:inline">添加</span>
-					</Button>
+					{/* 添加站点（仅 ALLOW_CUSTOM_SITES 时显示） */}
+					{onAddSite && (
+						<Button
+							variant="primary"
+							size="sm"
+							onClick={onAddSite}
+							aria-label="添加站点"
+							className="gap-1.5"
+						>
+							<PlusIcon size={14} />
+							<span className="hidden sm:inline">添加</span>
+						</Button>
+					)}
 
 					{/* 分割线 */}
 					<div className="h-5 w-px bg-border mx-0.5" aria-hidden="true" />
