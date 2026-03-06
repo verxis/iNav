@@ -133,41 +133,48 @@ function SiteIcon({ name, iconUrl, size = 'md' }: SiteIconProps) {
 	)
 }
 
+// 绿色小草芽 SVG，custom 与 imported 共用
+function SproutIcon() {
+	return (
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			width="10"
+			height="10"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			strokeWidth="2"
+			strokeLinecap="round"
+			strokeLinejoin="round"
+			aria-hidden="true"
+		>
+			<path d="M12 22V12" />
+			<path d="M12 12C12 12 7 10 5 6c3 0 6 2 7 6z" />
+			<path d="M12 12C12 12 17 10 19 6c-3 0-6 2-7 6z" />
+		</svg>
+	)
+}
+
 function SourceBadge({ source }: { source?: string }) {
 	if (source === 'imported') {
 		return (
-			<span className="badge badge-warning text-[10px] px-1.5 py-0.5 leading-none">
-				导入
+			<span
+				className="inline-flex items-center gap-0.5 text-[10px] leading-none"
+				style={{ color: '#22c55e' }}
+				title="书签导入"
+			>
+				<SproutIcon />
 			</span>
 		)
 	}
 	if (source === 'custom') {
-		// 绿色小草芽图标，代表「用户种下的站点」
 		return (
 			<span
 				className="inline-flex items-center gap-0.5 text-[10px] leading-none"
 				style={{ color: '#22c55e' }}
 				title="自定义站点"
 			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="10"
-					height="10"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					strokeWidth="2"
-					strokeLinecap="round"
-					strokeLinejoin="round"
-					aria-hidden="true"
-				>
-					{/* 茎 */}
-					<path d="M12 22V12" />
-					{/* 左叶 */}
-					<path d="M12 12C12 12 7 10 5 6c3 0 6 2 7 6z" />
-					{/* 右叶 */}
-					<path d="M12 12C12 12 17 10 19 6c-3 0-6 2-7 6z" />
-				</svg>
+				<SproutIcon />
 			</span>
 		)
 	}

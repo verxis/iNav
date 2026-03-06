@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '@/components/atoms/Button'
-import { CheckIcon, GlobeIcon, XIcon } from '@/components/atoms/Icons'
+import {
+	CheckIcon,
+	GlobeIcon,
+	RefreshIcon,
+	XIcon,
+} from '@/components/atoms/Icons'
 import {
 	type SitePayload,
 	type ValidationError,
@@ -291,51 +296,62 @@ export function SiteFormModal({
 	)
 
 	/**
+	 * 核心抓取逻辑，添加模式和编辑模式的刷新按钮共用。
+	 * overwrite=true 时强制覆盖已有名称/描述（手动点刷新时使用）。
+	 */
+	const doFetchMeta = useCallback(async (url: string, overwrite = false) => {
+		const trimmed = url.trim()
+		if (!isValidUrl(trimmed)) return
+		setFetchStatus('loading')
+		fetchedUrlRef.current = trimmed
+		const meta = await fetchPageMeta(trimmed)
+		if (!meta) {
+			setFetchStatus('error')
+			return
+		}
+		setFetchStatus('done')
+		setForm((prev) => ({
+			...prev,
+			name:
+				overwrite || !prev.name.trim()
+					? meta.title.slice(0, 50) || prev.name
+					: prev.name,
+			description:
+				overwrite || !prev.description.trim()
+					? meta.description.slice(0, 100) || prev.description
+					: prev.description,
+		}))
+	}, [])
+
+	/** 编辑模式下手动点击刷新按钮 */
+	const handleRefreshMeta = useCallback(() => {
+		if (debounceRef.current) clearTimeout(debounceRef.current)
+		doFetchMeta(form.url, true)
+	}, [form.url, doFetchMeta])
+
+	/**
 	 * URL 变更时触发自动获取（仅添加模式）。
-	 * 防抖 500ms 后检查 URL 合法性，合法则请求 allorigins。
-	 * 只有当名称或描述为空时才自动填入，不覆盖用户已输入的内容。
+	 * 防抖 600ms，只填入用户尚未输入的字段，不覆盖已有内容。
 	 */
 	const handleUrlChange = useCallback(
 		(url: string) => {
 			setField('url', url)
 			if (isEdit) return
 
-			// 清除上一个防抖计时器
 			if (debounceRef.current) clearTimeout(debounceRef.current)
 
 			const trimmed = url.trim()
-
-			// URL 不合法或已经抓取过，直接重置状态
 			if (!isValidUrl(trimmed)) {
 				setFetchStatus('idle')
 				return
 			}
 			if (trimmed === fetchedUrlRef.current) return
 
-			// 防抖：用户停止输入 600ms 后才发请求
-			// loading 状态也在 timeout 内设置，避免加载圈一直转但请求未发出
-			debounceRef.current = setTimeout(async () => {
-				setFetchStatus('loading')
-				fetchedUrlRef.current = trimmed
-				const meta = await fetchPageMeta(trimmed)
-				if (!meta) {
-					setFetchStatus('error')
-					return
-				}
-				setFetchStatus('done')
-				// 只填入用户尚未输入的字段，不覆盖已有内容
-				setForm((prev) => ({
-					...prev,
-					name: prev.name.trim()
-						? prev.name
-						: meta.title.slice(0, 50) || prev.name,
-					description: prev.description.trim()
-						? prev.description
-						: meta.description.slice(0, 100) || prev.description,
-				}))
+			debounceRef.current = setTimeout(() => {
+				doFetchMeta(trimmed, false)
 			}, 600)
 		},
-		[setField, isEdit],
+		[setField, isEdit, doFetchMeta],
 	)
 
 	// 获取某字段的错误信息
@@ -487,7 +503,7 @@ export function SiteFormModal({
 							error={fieldError('url')}
 							hint={
 								isEdit
-									? '修改 URL 后将重新获取网站图标'
+									? '点击刷新按钮可重新获取标题与描述'
 									: '输入链接后自动获取标题与描述'
 							}
 						>
@@ -509,48 +525,79 @@ export function SiteFormModal({
 									autoCapitalize="none"
 									spellCheck={false}
 								/>
-								{/* 抓取状态指示器 */}
-								{!isEdit && fetchStatus !== 'idle' && (
-									<div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2.5">
-										{fetchStatus === 'loading' && (
-											<span className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-										)}
-										{fetchStatus === 'done' && (
-											<svg
-												width="14"
-												height="14"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2.5"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												className="text-success"
-												aria-label="已自动填入标题与描述"
-											>
-												<polyline points="20 6 9 17 4 12" />
-											</svg>
-										)}
-										{fetchStatus === 'error' && (
-											<svg
-												width="13"
-												height="13"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												strokeWidth="2"
-												strokeLinecap="round"
-												strokeLinejoin="round"
-												className="text-muted-foreground"
-												aria-label="无法自动获取，请手动填写"
-											>
-												<circle cx="12" cy="12" r="10" />
-												<line x1="12" y1="8" x2="12" y2="12" />
-												<line x1="12" y1="16" x2="12.01" y2="16" />
-											</svg>
-										)}
-									</div>
-								)}
+								{/* 右侧操作区：编辑模式显示刷新按钮，添加模式显示抓取状态 */}
+								<div className="absolute inset-y-0 right-0 flex items-center pr-2">
+									{isEdit ? (
+										/* 编辑模式：刷新按钮 */
+										<button
+											type="button"
+											onClick={handleRefreshMeta}
+											disabled={
+												fetchStatus === 'loading' || !isValidUrl(form.url)
+											}
+											aria-label="重新获取标题与描述"
+											title="重新获取标题与描述"
+											className="
+												flex items-center justify-center
+												h-5 w-5 rounded
+												text-muted-foreground
+												hover:text-foreground hover:bg-muted
+												disabled:opacity-30 disabled:pointer-events-none
+												transition-colors duration-100
+												focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary
+											"
+										>
+											{fetchStatus === 'loading' ? (
+												<span className="h-3 w-3 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+											) : (
+												<RefreshIcon size={12} />
+											)}
+										</button>
+									) : (
+										/* 添加模式：抓取状态图标 */
+										fetchStatus !== 'idle' && (
+											<div className="pointer-events-none flex items-center">
+												{fetchStatus === 'loading' && (
+													<span className="h-3.5 w-3.5 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+												)}
+												{fetchStatus === 'done' && (
+													<svg
+														width="14"
+														height="14"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="2.5"
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														className="text-success"
+														aria-label="已自动填入标题与描述"
+													>
+														<polyline points="20 6 9 17 4 12" />
+													</svg>
+												)}
+												{fetchStatus === 'error' && (
+													<svg
+														width="13"
+														height="13"
+														viewBox="0 0 24 24"
+														fill="none"
+														stroke="currentColor"
+														strokeWidth="2"
+														strokeLinecap="round"
+														strokeLinejoin="round"
+														className="text-muted-foreground"
+														aria-label="无法自动获取，请手动填写"
+													>
+														<circle cx="12" cy="12" r="10" />
+														<line x1="12" y1="8" x2="12" y2="12" />
+														<line x1="12" y1="16" x2="12.01" y2="16" />
+													</svg>
+												)}
+											</div>
+										)
+									)}
+								</div>
 							</div>
 							{/* 抓取成功提示 */}
 							{!isEdit && fetchStatus === 'done' && (

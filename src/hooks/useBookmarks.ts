@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { BookmarkImportResult, Site, SiteCategory } from '@/types'
+import type { BookmarkImportResult, Site } from '@/types'
 import { getFaviconUrl } from '@/utils/favicon'
 
 const STORAGE_KEY = 'inav-imported-sites'
@@ -21,18 +21,6 @@ function saveToStorage(sites: Site[]): void {
 	} catch {}
 }
 
-function guessCategoryFromFolder(folderName: string): SiteCategory {
-	const name = folderName.toLowerCase()
-	if (/ai|gpt|llm|claude|gemini/.test(name)) return 'AI'
-	if (/dev|code|git|api|程序|开发|技术/.test(name)) return '开发工具'
-	if (/design|ui|ux|设计|figma/.test(name)) return '设计'
-	if (/doc|文档|manual|reference|参考/.test(name)) return '文档参考'
-	if (/learn|学习|course|教程|tutorial/.test(name)) return '学习'
-	if (/tool|效率|util|工具/.test(name)) return '效率'
-	if (/video|music|game|娱乐|影视/.test(name)) return '娱乐'
-	return '其他'
-}
-
 function slugify(text: string): string {
 	return text
 		.toLowerCase()
@@ -49,7 +37,10 @@ function extractDomain(url: string): string {
 	}
 }
 
-function parseBookmarkHtml(html: string, existingIds: Set<string>): BookmarkImportResult {
+function parseBookmarkHtml(
+	html: string,
+	existingIds: Set<string>,
+): BookmarkImportResult {
 	const parser = new DOMParser()
 	const doc = parser.parseFromString(html, 'text/html')
 
@@ -95,7 +86,7 @@ function parseBookmarkHtml(html: string, existingIds: Set<string>): BookmarkImpo
 				url,
 				description: `从书签导入 — ${domain}`,
 				iconUrl: domain ? getFaviconUrl(domain) : undefined,
-				category: guessCategoryFromFolder(folderName),
+				category: '其他',
 				source: 'imported',
 				addedAt: new Date().toISOString(),
 				tags: folderName && folderName !== '书签栏' ? [folderName] : [],
@@ -119,7 +110,9 @@ export interface UseBookmarksReturn {
 }
 
 export function useBookmarks(): UseBookmarksReturn {
-	const [importedSites, setImportedSites] = useState<Site[]>(() => loadFromStorage())
+	const [importedSites, setImportedSites] = useState<Site[]>(() =>
+		loadFromStorage(),
+	)
 
 	useEffect(() => {
 		saveToStorage(importedSites)
@@ -161,7 +154,10 @@ export function useBookmarks(): UseBookmarksReturn {
 		const folderHtml = Array.from(grouped.entries())
 			.map(([cat, sites]) => {
 				const items = sites
-					.map((s) => `    <DT><A HREF="${escapeHtml(s.url)}">${escapeHtml(s.name)}</A>`)
+					.map(
+						(s) =>
+							`    <DT><A HREF="${escapeHtml(s.url)}">${escapeHtml(s.name)}</A>`,
+					)
 					.join('\n')
 				return `  <DT><H3>${escapeHtml(cat)}</H3>\n  <DL><p>\n${items}\n  </DL><p>`
 			})
@@ -180,7 +176,14 @@ ${folderHtml}
 		triggerDownload(blob, 'inav-bookmarks.html')
 	}, [])
 
-	return { importedSites, importFromHtml, removeImported, clearImported, exportToJson, exportToHtml }
+	return {
+		importedSites,
+		importFromHtml,
+		removeImported,
+		clearImported,
+		exportToJson,
+		exportToHtml,
+	}
 }
 
 function triggerDownload(blob: Blob, filename: string) {
