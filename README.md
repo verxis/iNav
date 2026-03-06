@@ -206,6 +206,7 @@ bun run preview
 
 - [ ] 实现 iNav 后端 API
 - [ ] 实现 iNav 管理后台页面
+- [ ] 实现 iNav 更多自定义配置（后台一键设置）
 - [ ] 实现自定义分类
 - [ ] 实现 iNav 浏览器扩展
 - [ ] 添加 Docker 一键部署
