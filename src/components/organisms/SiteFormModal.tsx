@@ -6,12 +6,13 @@ import {
 	RefreshIcon,
 	XIcon,
 } from '@/components/atoms/Icons'
+import { SITE_CATEGORIES } from '@/data/categories'
 import {
 	type SitePayload,
 	type ValidationError,
 	validateSitePayload,
 } from '@/hooks/useSiteManager'
-import type { Site, SiteCategory } from '@/types'
+import type { Site } from '@/types'
 import { getFaviconUrl } from '@/utils/favicon'
 
 /* ============================================================
@@ -79,57 +80,245 @@ function isValidUrl(url: string): boolean {
    - Esc 关闭，Enter 提交（非 textarea 时）
    ============================================================ */
 
-const CATEGORIES: SiteCategory[] = [
-	'AI',
-	'开发工具',
-	'设计',
-	'文档参考',
-	'学习',
-	'效率',
-	'娱乐',
-	'其他',
-]
+// ---- favicon 预览（可点击编辑自定义 icon URL） ----
 
-// ---- favicon 预览 ----
+interface FaviconPreviewProps {
+	siteUrl: string
+	name: string
+	customIconUrl: string
+	onIconUrlChange: (url: string) => void
+}
 
-function FaviconPreview({ url, name }: { url: string; name: string }) {
-	const [err, setErr] = useState(false)
-	const [iconUrl, setIconUrl] = useState('')
+function FaviconPreview({
+	siteUrl,
+	name,
+	customIconUrl,
+	onIconUrlChange,
+}: FaviconPreviewProps) {
+	const [popoverOpen, setPopoverOpen] = useState(false)
+	const [inputVal, setInputVal] = useState(customIconUrl)
+	const [previewErr, setPreviewErr] = useState(false)
+	const inputRef = useRef<HTMLInputElement>(null)
+	const popoverRef = useRef<HTMLDivElement>(null)
 
-	useEffect(() => {
-		setErr(false)
+	// 派生实际显示的 icon URL：有自定义值用自定义，否则从 siteUrl 推断
+	const autoIconUrl = (() => {
 		try {
-			const domain = new URL(url.trim()).hostname
-			if (domain) {
-				setIconUrl(getFaviconUrl(domain) ?? '')
-			} else {
-				setIconUrl('')
-			}
+			const domain = new URL(siteUrl.trim()).hostname
+			return domain ? (getFaviconUrl(domain) ?? '') : ''
 		} catch {
-			setIconUrl('')
+			return ''
 		}
-	}, [url])
+	})()
+	const displayUrl = customIconUrl || autoIconUrl
 
-	if (!iconUrl || err) {
-		const initial = [...(name || '?')][0]?.toUpperCase() ?? '?'
-		return (
-			<div className="h-9 w-9 shrink-0 rounded-lg bg-muted border border-border flex items-center justify-center text-sm font-semibold text-muted-foreground select-none">
-				{initial}
-			</div>
-		)
+	// 打开 popover 时同步最新值并聚焦
+	const openPopover = (e: React.MouseEvent) => {
+		e.preventDefault()
+		setInputVal(customIconUrl)
+		setPreviewErr(false)
+		setPopoverOpen(true)
+		requestAnimationFrame(() => inputRef.current?.focus())
 	}
 
+	// 点击外部关闭
+	useEffect(() => {
+		if (!popoverOpen) return
+		const handler = (e: MouseEvent) => {
+			if (
+				popoverRef.current &&
+				!popoverRef.current.contains(e.target as Node)
+			) {
+				setPopoverOpen(false)
+			}
+		}
+		document.addEventListener('mousedown', handler)
+		return () => document.removeEventListener('mousedown', handler)
+	}, [popoverOpen])
+
+	const handleConfirm = () => {
+		onIconUrlChange(inputVal.trim())
+		setPopoverOpen(false)
+	}
+
+	const handleClear = () => {
+		onIconUrlChange('')
+		setInputVal('')
+		setPopoverOpen(false)
+	}
+
+	// 图标内容（头像 or 图片）
+	const [imgErr, setImgErr] = useState(false)
+	// 当图标来源变化时重置错误状态；用稳定的 key 字符串触发，避免 lint 误报
+	const iconSourceKey = `${customIconUrl}||${siteUrl}`
+	// biome-ignore lint/correctness/useExhaustiveDependencies: iconSourceKey is intentionally used as a trigger
+	useEffect(() => {
+		setImgErr(false)
+	}, [iconSourceKey])
+
+	const iconContent =
+		displayUrl && !imgErr ? (
+			<img
+				src={displayUrl}
+				alt=""
+				width={36}
+				height={36}
+				className="w-full h-full rounded-lg object-contain"
+				onError={() => setImgErr(true)}
+				loading="eager"
+				decoding="async"
+			/>
+		) : (
+			<span className="text-sm font-semibold text-muted-foreground select-none">
+				{[...(name || '?')][0]?.toUpperCase() ?? '?'}
+			</span>
+		)
+
 	return (
-		<img
-			src={iconUrl}
-			alt=""
-			width={36}
-			height={36}
-			className="h-9 w-9 shrink-0 rounded-lg object-contain border border-border bg-surface"
-			onError={() => setErr(true)}
-			loading="eager"
-			decoding="async"
-		/>
+		<div className="relative shrink-0" ref={popoverRef}>
+			{/* 可点击的图标按钮 */}
+			<button
+				type="button"
+				onClick={openPopover}
+				aria-label="自定义图标"
+				title="点击自定义图标"
+				className="
+					group relative
+					h-9 w-9 rounded-lg
+					bg-muted border border-border
+					flex items-center justify-center
+					overflow-hidden
+					hover:border-primary/50 hover:ring-2 hover:ring-primary/20
+					transition-all duration-150
+					focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary
+				"
+			>
+				{iconContent}
+				{/* hover 遮罩提示 */}
+				<span
+					className="
+					absolute inset-0 flex items-center justify-center
+					bg-black/40 rounded-lg
+					opacity-0 group-hover:opacity-100
+					transition-opacity duration-150
+				"
+				>
+					<svg
+						width="14"
+						height="14"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="white"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						aria-hidden="true"
+					>
+						<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+						<polyline points="17 8 12 3 7 8" />
+						<line x1="12" y1="3" x2="12" y2="15" />
+					</svg>
+				</span>
+			</button>
+
+			{/* Popover */}
+			{popoverOpen && (
+				<div
+					className="
+						absolute left-0 top-full mt-2 z-50
+						w-72 popover animate-in
+					"
+					role="dialog"
+					aria-label="自定义图标 URL"
+				>
+					<div className="px-3 py-2.5 border-b border-border">
+						<p className="text-xs font-medium text-foreground">自定义图标</p>
+						<p className="text-[11px] text-muted-foreground mt-0.5">
+							填入图片 URL，留空则自动获取
+						</p>
+					</div>
+					<div className="px-3 py-2.5 space-y-2">
+						{/* 预览 + 输入框 */}
+						<div className="flex items-center gap-2">
+							{/* 实时预览 */}
+							<div className="h-8 w-8 shrink-0 rounded-md bg-muted border border-border flex items-center justify-center overflow-hidden">
+								{inputVal.trim() && !previewErr ? (
+									<img
+										src={inputVal.trim()}
+										alt=""
+										width={32}
+										height={32}
+										className="w-full h-full object-contain"
+										onError={() => setPreviewErr(true)}
+									/>
+								) : (
+									<span className="text-xs font-semibold text-muted-foreground">
+										{[...(name || '?')][0]?.toUpperCase() ?? '?'}
+									</span>
+								)}
+							</div>
+							<input
+								ref={inputRef}
+								type="url"
+								value={inputVal}
+								onChange={(e) => {
+									setPreviewErr(false)
+									setInputVal(e.target.value)
+								}}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault()
+										handleConfirm()
+									}
+									if (e.key === 'Escape') {
+										e.preventDefault()
+										setPopoverOpen(false)
+									}
+								}}
+								placeholder="https://example.com/icon.png"
+								className="input-base px-2.5 py-1.5 text-xs flex-1 min-w-0"
+								autoComplete="off"
+								spellCheck={false}
+							/>
+						</div>
+						{/* 操作按钮 */}
+						<div className="flex items-center justify-between gap-2">
+							<button
+								type="button"
+								onClick={handleClear}
+								className="text-[11px] text-muted-foreground hover:text-error transition-colors"
+							>
+								恢复自动获取
+							</button>
+							<div className="flex gap-1.5">
+								<button
+									type="button"
+									onClick={() => setPopoverOpen(false)}
+									className="
+										h-7 px-2.5 rounded-md text-xs
+										text-muted-foreground hover:bg-muted
+										transition-colors duration-100
+									"
+								>
+									取消
+								</button>
+								<button
+									type="button"
+									onClick={handleConfirm}
+									className="
+										h-7 px-2.5 rounded-md text-xs font-medium
+										bg-primary text-white hover:bg-primary/90
+										transition-colors duration-100
+									"
+								>
+									确认
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
+		</div>
 	)
 }
 
@@ -448,8 +637,13 @@ export function SiteFormModal({
 					{/* Header */}
 					<div className="flex items-center justify-between px-5 py-4 border-b border-border shrink-0">
 						<div className="flex items-center gap-3">
-							{/* 预览图标 */}
-							<FaviconPreview url={form.url} name={form.name} />
+							{/* 预览图标（可点击自定义） */}
+							<FaviconPreview
+								siteUrl={form.url}
+								name={form.name}
+								customIconUrl={form.iconUrl ?? ''}
+								onIconUrlChange={(url) => setField('iconUrl', url)}
+							/>
 							<div>
 								<h2 className="text-sm font-semibold text-foreground">
 									{isEdit ? '编辑站点' : '添加站点'}
@@ -655,7 +849,7 @@ export function SiteFormModal({
 								className="flex flex-wrap gap-1.5"
 								aria-label="选择分类"
 							>
-								{CATEGORIES.map((cat) => (
+								{SITE_CATEGORIES.map((cat) => (
 									<button
 										key={cat}
 										type="button"

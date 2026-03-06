@@ -1,14 +1,9 @@
 import type React from 'react'
+import type { SiteCategory } from '@/data/categories'
 
-export type SiteCategory =
-	| 'AI'
-	| '开发工具'
-	| '设计'
-	| '文档参考'
-	| '学习'
-	| '效率'
-	| '娱乐'
-	| '其他'
+// SiteCategory is defined in data/categories.ts alongside SITE_CATEGORIES array.
+// To add/rename/remove a category, only edit that file.
+export type { SiteCategory } from '@/data/categories'
 
 export interface Site {
 	id: string

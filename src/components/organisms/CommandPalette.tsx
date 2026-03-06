@@ -5,6 +5,7 @@ import {
 	SearchIcon,
 	XIcon,
 } from '@/components/atoms/Icons'
+import { CATEGORY_COLOR } from '@/data/categories'
 import type { Site, SiteCategory } from '@/types'
 
 /* ============================================================
@@ -71,17 +72,6 @@ function searchSites(sites: Site[], query: string): Site[] {
 }
 
 // ---- 分类颜色 ----
-
-const CATEGORY_COLOR: Partial<Record<SiteCategory, string>> = {
-	AI: 'text-violet-500',
-	开发工具: 'text-blue-500',
-	设计: 'text-pink-500',
-	文档参考: 'text-amber-500',
-	学习: 'text-green-500',
-	效率: 'text-cyan-500',
-	娱乐: 'text-orange-500',
-	其他: 'text-gray-400',
-}
 
 function CategoryDot({ category }: { category: SiteCategory }) {
 	const color = CATEGORY_COLOR[category] ?? 'text-gray-400'

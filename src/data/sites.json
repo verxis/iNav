@@ -1,5 +1,14 @@
 [
 	{
+		"id": "inav",
+		"name": "iNav",
+		"url": "https://nav.dogxi.me",
+		"description": "轻、快、优雅的个人导航站",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=nav.dogxi.me",
+		"category": "开源项目",
+		"pinned": true
+	},
+	{
 		"id": "chatgpt",
 		"name": "ChatGPT",
 		"url": "https://chat.openai.com",
@@ -24,10 +33,7 @@
 		"description": "Vercel 出品的 AI UI 生成工具，直接输出 Tailwind + React 代码",
 		"iconUrl": "https://ico.dogxi.me/icon?domain=v0.dev",
 		"category": "AI",
-		"tags": [
-			"UI",
-			"代码生成"
-		]
+		"tags": ["UI", "代码生成"]
 	},
 	{
 		"id": "perplexity",
