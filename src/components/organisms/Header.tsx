@@ -279,57 +279,62 @@ export function Header({
 }: HeaderProps) {
 	return (
 		<header className="sticky top-0 z-50 px-2 pt-2 sm:px-4">
-			<div className="nav-shell w-full flex items-center gap-2 h-[3.25rem] px-2.5 sm:px-4">
-				{/* 左：Logo — 点击重置搜索和分类 */}
-				<NavLink
-					to="/"
-					onClick={onReset}
-					className="text-foreground no-underline shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-					aria-label="iDog 首页，点击清除搜索"
-				>
-					<Logo />
-				</NavLink>
+			<div className="mx-auto w-full max-w-7xl">
+				<div className="nav-shell w-full flex items-center gap-2 h-[3.25rem] px-2.5 sm:px-4">
+					{/* 左：Logo — 点击重置搜索和分类 */}
+					<NavLink
+						to="/"
+						onClick={onReset}
+						className="text-foreground no-underline shrink-0 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+						aria-label="iDog 首页，点击清除搜索"
+					>
+						<Logo />
+					</NavLink>
 
-				{/* 中：搜索框（flex-1） */}
-				<div className="flex-1 min-w-0 mx-1 sm:mx-2">
-					<SearchBar
-						value={searchValue}
-						onChange={onSearchChange}
-						inputRef={searchInputRef}
-						placeholder="搜索站点..."
-					/>
-				</div>
+					{/* 中：搜索框（flex-1） */}
+					<div className="flex-1 min-w-0 mx-1 sm:mx-2.5">
+						<SearchBar
+							value={searchValue}
+							onChange={onSearchChange}
+							inputRef={searchInputRef}
+							placeholder="搜索站点..."
+						/>
+					</div>
 
-				{/* 右：工具区 */}
-				<div className="nav-tools-group flex items-center gap-1 shrink-0">
-					{/* ⌘K 命令面板 */}
-					<CmdKButton onClick={onOpenCommandPalette} />
+					{/* 右：工具区 */}
+					<div className="nav-tools-group flex items-center gap-1 shrink-0">
+						{/* ⌘K 命令面板 */}
+						<CmdKButton onClick={onOpenCommandPalette} />
 
-					{/* 分割线 */}
-					<div className="hidden sm:block nav-divider mx-0.5" aria-hidden="true" />
+						{/* 分割线 */}
+						<div
+							className="hidden sm:block nav-divider mx-0.5"
+							aria-hidden="true"
+						/>
 
-					{/* 添加站点（仅 ALLOW_CUSTOM_SITES 时显示） */}
-					{onAddSite && (
-						<Button
-							variant="primary"
-							size="sm"
-							onClick={onAddSite}
-							aria-label="添加站点"
-							className="nav-add-btn gap-1.5"
-						>
-							<PlusIcon size={14} />
-							<span className="hidden sm:inline">添加</span>
-						</Button>
-					)}
+						{/* 添加站点（仅 ALLOW_CUSTOM_SITES 时显示） */}
+						{onAddSite && (
+							<Button
+								variant="primary"
+								size="sm"
+								onClick={onAddSite}
+								aria-label="添加站点"
+								className="nav-add-btn gap-1.5"
+							>
+								<PlusIcon size={14} />
+								<span className="hidden sm:inline">添加</span>
+							</Button>
+						)}
 
-					{/* 分割线 */}
-					<div className="nav-divider mx-0.5" aria-hidden="true" />
+						{/* 分割线 */}
+						<div className="nav-divider mx-0.5" aria-hidden="true" />
 
-					{/* 主题切换 */}
-					<ThemeToggle />
+						{/* 主题切换 */}
+						<ThemeToggle />
 
-					{/* 信息面板 */}
-					<InfoPopover siteCount={siteCount} />
+						{/* 信息面板 */}
+						<InfoPopover siteCount={siteCount} />
+					</div>
 				</div>
 			</div>
 		</header>
