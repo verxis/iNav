@@ -345,6 +345,97 @@
 		overflow: hidden;
 	}
 
+	/* ---------- Header 导航 ---------- */
+	.nav-shell {
+		border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+		border-radius: calc(var(--radius-xl) + 2px);
+		background:
+			linear-gradient(
+				120deg,
+				color-mix(in srgb, var(--color-surface) 95%, transparent),
+				color-mix(in srgb, var(--color-surface-raised) 92%, transparent)
+			),
+			color-mix(in srgb, var(--color-background) 75%, transparent);
+		box-shadow:
+			0 10px 30px rgba(0, 0, 0, 0.06),
+			0 1px 0 color-mix(in srgb, var(--color-surface) 70%, transparent) inset;
+		backdrop-filter: blur(14px) saturate(170%);
+		-webkit-backdrop-filter: blur(14px) saturate(170%);
+	}
+
+	.nav-logo-pill {
+		padding: 0.375rem 0.625rem 0.375rem 0.5rem;
+		border-radius: var(--radius-lg);
+		background-color: color-mix(in srgb, var(--color-surface) 78%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+		transition:
+			background-color var(--duration-fast) ease,
+			border-color var(--duration-fast) ease;
+	}
+
+	.nav-logo-pill:hover {
+		background-color: color-mix(in srgb, var(--color-muted) 86%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+	}
+
+	.nav-tools-group {
+		padding: 0.25rem;
+		border-radius: var(--radius-lg);
+		background-color: color-mix(in srgb, var(--color-surface) 78%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent);
+	}
+
+	.nav-divider {
+		width: 1px;
+		height: 1.1rem;
+		background: color-mix(in srgb, var(--color-border) 70%, transparent);
+	}
+
+	.nav-cmd-btn {
+		border-radius: var(--radius-md);
+		border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+		background: color-mix(in srgb, var(--color-surface-raised) 85%, transparent);
+		color: var(--color-muted-foreground);
+		transition:
+			background-color var(--duration-fast) ease,
+			color var(--duration-fast) ease,
+			border-color var(--duration-fast) ease;
+	}
+
+	.nav-cmd-btn:hover {
+		background: color-mix(in srgb, var(--color-muted) 88%, transparent);
+		color: var(--color-foreground);
+		border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+	}
+
+	.nav-icon-btn {
+		border-radius: var(--radius-md);
+		border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+		background: color-mix(in srgb, var(--color-surface-raised) 85%, transparent);
+	}
+
+	.nav-icon-btn:hover {
+		background: color-mix(in srgb, var(--color-muted) 86%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 25%, var(--color-border));
+	}
+
+	.nav-add-btn {
+		border-radius: var(--radius-md);
+		background: linear-gradient(
+			135deg,
+			var(--color-primary) 0%,
+			color-mix(in srgb, var(--color-primary-hover) 85%, white 15%) 100%
+		);
+	}
+
+	.nav-add-btn:hover {
+		background: linear-gradient(
+			135deg,
+			var(--color-primary-hover) 0%,
+			color-mix(in srgb, var(--color-primary-hover) 92%, white 8%) 100%
+		);
+	}
+
 	/* ---------- 分割线 ---------- */
 	.divider {
 		width: 100%;
