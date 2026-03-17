@@ -218,7 +218,7 @@ function Logo() {
 			<NavLogoIcon size={26} />
 			<div>
 				<p className="text-sm font-bold text-foreground leading-none tracking-tight">
-					iNav
+					iDog
 				</p>
 				<p className="text-[10px] text-muted-foreground leading-none mt-0.5 hidden sm:block">
 					快速导航站
@@ -293,7 +293,7 @@ export function Header({
 					to="/"
 					onClick={onReset}
 					className="text-foreground no-underline shrink-0 rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-					aria-label="iNav 首页，点击清除搜索"
+					aria-label="iDog 首页，点击清除搜索"
 				>
 					<Logo />
 				</NavLink>
