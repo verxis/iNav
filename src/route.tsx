@@ -59,9 +59,50 @@ function PageLoader() {
 
 import { isRouteErrorResponse, Link, useRouteError } from 'react-router'
 
+function getErrorMessage(error: unknown): string {
+	if (isRouteErrorResponse(error)) {
+		if (typeof error.data === 'string' && error.data.trim()) {
+			return error.data
+		}
+
+		if (error.data && typeof error.data === 'object') {
+			const maybeMessage = (error.data as { message?: unknown }).message
+			if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+				return maybeMessage
+			}
+		}
+
+		if (error.statusText) {
+			return error.statusText
+		}
+
+		return `请求失败（${error.status}）`
+	}
+
+	if (error instanceof Error && error.message.trim()) {
+		return error.message
+	}
+
+	if (typeof error === 'string' && error.trim()) {
+		return error
+	}
+
+	if (error && typeof error === 'object') {
+		const maybeMessage = (error as { message?: unknown }).message
+		if (typeof maybeMessage === 'string' && maybeMessage.trim()) {
+			return maybeMessage
+		}
+	}
+
+	return '应用发生了未知错误，请刷新页面重试'
+}
+
 function ErrorPage() {
 	const error = useRouteError()
 	const is404 = isRouteErrorResponse(error) && error.status === 404
+	const errorMessage = is404
+		? '你访问的页面不存在，可能已被移除或链接有误'
+		: getErrorMessage(error)
 
 	return (
 		<main
@@ -72,11 +113,7 @@ function ErrorPage() {
 				{is404 ? '页面未找到' : '出现了一些问题'}
 			</h1>
 
-			<p className="text-muted-foreground mb-6 max-w-sm">
-				{is404
-					? '你访问的页面不存在，可能已被移除或链接有误'
-					: '应用发生了未知错误，请刷新页面重试'}
-			</p>
+			<p className="text-muted-foreground mb-6 max-w-sm">{errorMessage}</p>
 
 			{import.meta.env.DEV && !is404 && (
 				<pre className="mb-6 p-4 rounded-lg bg-muted text-left text-xs text-muted-foreground max-w-md overflow-auto">
