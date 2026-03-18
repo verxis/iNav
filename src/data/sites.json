@@ -215,19 +215,27 @@
 		"iconUrl": "https://ico.dogxi.me/icon?domain=undraw.co",
 		"category": "设计"
 	},
-	{
-		"id": "coolors",
-		"name": "Coolors",
-		"url": "https://coolors.co",
-		"description": "快速生成配色方案，支持导出 CSS Variables",
-		"iconUrl": "https://ico.dogxi.me/icon?domain=coolors.co",
-		"category": "设计"
-	},
-	{
-		"id": "react-docs",
-		"name": "React 文档",
-		"url": "https://react.dev",
-		"description": "React 官方文档，新版以 Hooks 为核心，必读",
+		{
+			"id": "coolors",
+			"name": "Coolors",
+			"url": "https://coolors.co",
+			"description": "快速生成配色方案，支持导出 CSS Variables",
+			"iconUrl": "https://ico.dogxi.me/icon?domain=coolors.co",
+			"category": "设计"
+		},
+		{
+			"id": "d1v-ai",
+			"name": "d1v.ai",
+			"url": "https://d1v.ai",
+			"description": "d1v.ai（自定义链接）",
+			"iconUrl": "https://ico.dogxi.me/icon?domain=d1v.ai",
+			"category": "设计"
+		},
+		{
+			"id": "react-docs",
+			"name": "React 文档",
+			"url": "https://react.dev",
+			"description": "React 官方文档，新版以 Hooks 为核心，必读",
 		"iconUrl": "https://ico.dogxi.me/icon?domain=react.dev",
 		"category": "文档参考",
 		"pinned": true
