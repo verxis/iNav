@@ -184,8 +184,9 @@ function EngineCard({ engine, query, rank }: EngineCardProps) {
 			target="_blank"
 			rel="noopener noreferrer"
 			aria-label={`在 ${engine.name} 中搜索「${query.trim()}」`}
+			data-source="engine"
 			className="
-				card-interactive group relative flex flex-col gap-2 p-3
+				card-interactive engine-card group relative flex flex-col gap-2 p-3
 				no-underline text-foreground no-tap-highlight
 				focus-visible:outline-none focus-visible:ring-2
 				focus-visible:ring-primary focus-visible:ring-offset-2

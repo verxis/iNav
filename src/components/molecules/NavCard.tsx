@@ -341,6 +341,8 @@ export function NavCard({
 				target="_blank"
 				rel="noopener noreferrer"
 				aria-label={`${name} — ${description}（在新标签页中打开）`}
+				data-pinned={pinned ? 'true' : 'false'}
+				data-source={source}
 				className={[
 					'card-interactive group relative flex flex-col gap-2 p-3',
 					'no-underline text-foreground no-tap-highlight',
@@ -439,8 +441,10 @@ export function NavCard({
 					<div
 						className="
 							shrink-0 flex items-center gap-0.5
-							opacity-0 group-hover:opacity-100
-							transition-opacity duration-100
+							opacity-0 translate-y-0.5 pointer-events-none
+							group-hover:opacity-100 group-hover:translate-y-0 group-hover:pointer-events-auto
+							group-focus-within:opacity-100 group-focus-within:translate-y-0 group-focus-within:pointer-events-auto
+							transition-all duration-150
 						"
 						onClick={(e) => e.preventDefault()}
 						onKeyDown={(e) => {
