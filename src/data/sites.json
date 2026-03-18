@@ -190,19 +190,27 @@
 		"category": "开发工具",
 		"pinned": true
 	},
-	{
-		"id": "figma",
-		"name": "Figma",
-		"url": "https://figma.com",
-		"description": "协作式 UI 设计工具，前端与设计师对接的标准工具",
-		"iconUrl": "https://ico.dogxi.me/icon?domain=figma.com",
-		"category": "设计",
-		"pinned": true
-	},
-	{
-		"id": "excalidraw",
-		"name": "Excalidraw",
-		"url": "https://excalidraw.com",
+		{
+			"id": "figma",
+			"name": "Figma",
+			"url": "https://figma.com",
+			"description": "协作式 UI 设计工具，前端与设计师对接的标准工具",
+			"iconUrl": "https://ico.dogxi.me/icon?domain=figma.com",
+			"category": "设计",
+			"pinned": true
+		},
+		{
+			"id": "canva",
+			"name": "Canva",
+			"url": "https://www.canva.com",
+			"description": "在线视觉设计平台，适合快速制作海报、PPT 和社媒素材",
+			"iconUrl": "https://ico.dogxi.me/icon?domain=canva.com",
+			"category": "设计"
+		},
+		{
+			"id": "excalidraw",
+			"name": "Excalidraw",
+			"url": "https://excalidraw.com",
 		"description": "手绘风格在线白板，画架构图和流程图的首选",
 		"iconUrl": "https://ico.dogxi.me/icon?domain=excalidraw.com",
 		"category": "设计"
