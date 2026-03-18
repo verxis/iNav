@@ -297,6 +297,14 @@
 		"category": "社区"
 	},
 	{
+		"id": "github-community",
+		"name": "GitHub",
+		"url": "https://github.com",
+		"description": "全球开发者社区与代码协作平台，发现项目、参与讨论和贡献开源。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=github.com",
+		"category": "社区"
+	},
+	{
 		"id": "typescript-docs",
 		"name": "TypeScript 手册",
 		"url": "https://www.typescriptlang.org/docs/",
