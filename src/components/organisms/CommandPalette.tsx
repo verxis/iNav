@@ -394,9 +394,14 @@ export function CommandPalette({ open, onClose, sites }: CommandPaletteProps) {
 
 					{/* 分组标题 */}
 					<div className="px-3 pt-2 pb-1">
-						<span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-							{query.trim() ? `搜索结果` : '最近添加 / 置顶'}
-						</span>
+						{query.trim() ? (
+							<span className="cmd-group-label">搜索结果</span>
+						) : (
+							<span className="cmd-group-label cmd-group-label-recent">
+								<span className="cmd-group-dot" aria-hidden="true" />
+								最近添加 / 置顶
+							</span>
+						)}
 					</div>
 
 					{/* 结果列表 */}
