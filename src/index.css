@@ -237,13 +237,13 @@
 		border-color: var(--color-primary);
 	}
 
-	.card-interactive {
-		position: relative;
-		isolation: isolate;
-		overflow: hidden;
-		background-color: var(--color-surface);
-		border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
-		border-radius: var(--radius-card);
+		.card-interactive {
+			position: relative;
+			isolation: isolate;
+			overflow: hidden;
+			background-color: var(--color-surface);
+			border: 1px solid color-mix(in srgb, var(--color-border) 82%, transparent);
+			border-radius: var(--radius-card);
 		background:
 			linear-gradient(
 				120deg,
@@ -261,14 +261,23 @@
 			background-color var(--duration-fast) ease,
 			box-shadow var(--duration-fast) ease,
 			transform var(--duration-fast) ease,
-			filter var(--duration-fast) ease;
-	}
+				filter var(--duration-fast) ease;
+		}
 
-	.card-interactive::before {
-		content: "";
-		position: absolute;
-		left: 0;
-		right: 0;
+		/* 导航卡片：边框更轻一些（不影响其它交互卡片，如引擎卡片） */
+		.card-interactive.nav-card {
+			border-color: color-mix(
+				in srgb,
+				var(--color-border) 68%,
+				transparent
+			);
+		}
+
+		.card-interactive::before {
+			content: "";
+			position: absolute;
+			left: 0;
+			right: 0;
 		top: 0;
 		height: 1px;
 		background: linear-gradient(

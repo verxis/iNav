@@ -341,15 +341,15 @@ export function NavCard({
 				target="_blank"
 				rel="noopener noreferrer"
 				aria-label={`${name} — ${description}（在新标签页中打开）`}
-				data-pinned={pinned ? 'true' : 'false'}
-				data-source={source}
-				className={[
-					'card-interactive group relative flex flex-col gap-2 p-3',
-					'no-underline text-foreground no-tap-highlight',
-					'focus-visible:outline-none focus-visible:ring-2',
-					'focus-visible:ring-primary focus-visible:ring-offset-2',
-					className,
-				]
+					data-pinned={pinned ? 'true' : 'false'}
+					data-source={source}
+					className={[
+						'card-interactive nav-card group relative flex flex-col gap-2 p-3',
+						'no-underline text-foreground no-tap-highlight',
+						'focus-visible:outline-none focus-visible:ring-2',
+						'focus-visible:ring-primary focus-visible:ring-offset-2',
+						className,
+					]
 					.filter(Boolean)
 					.join(' ')}
 				style={{
