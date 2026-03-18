@@ -313,6 +313,14 @@
 		"category": "社区"
 	},
 	{
+		"id": "reddit",
+		"name": "Reddit",
+		"url": "https://www.reddit.com",
+		"description": "全球热门内容社区，覆盖技术、新闻、兴趣小组与实时讨论。",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=www.reddit.com",
+		"category": "社区"
+	},
+	{
 		"id": "typescript-docs",
 		"name": "TypeScript 手册",
 		"url": "https://www.typescriptlang.org/docs/",
