@@ -370,6 +370,22 @@
 		"category": "效率"
 	},
 	{
+		"id": "trello",
+		"name": "Trello",
+		"url": "https://trello.com",
+		"description": "经典看板协作工具，适合任务拆解和团队进度管理",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=trello.com",
+		"category": "效率"
+	},
+	{
+		"id": "todoist",
+		"name": "Todoist",
+		"url": "https://todoist.com",
+		"description": "知名待办清单工具，支持跨平台同步与项目管理",
+		"iconUrl": "https://ico.dogxi.me/icon?domain=todoist.com",
+		"category": "效率"
+	},
+	{
 		"id": "ray-so",
 		"name": "Ray.so",
 		"url": "https://ray.so",
